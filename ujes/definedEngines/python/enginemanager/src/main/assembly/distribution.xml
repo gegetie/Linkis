@@ -97,8 +97,8 @@
                 <exclude>io.reactivex:rxnetty:jar</exclude>
                 <exclude>io.reactivex:rxnetty-contexts:jar</exclude>
                 <exclude>io.reactivex:rxnetty-servo:jar</exclude>
-                <exclude>javax.servlet:javax.servlet-api:jar</exclude>
-                <exclude>javax.servlet.jsp:jsp-api:jar</exclude>
+               <!-- <exclude>javax.servlet:javax.servlet-api:jar</exclude>
+                <exclude>javax.servlet.jsp:jsp-api:jar</exclude> -->
                 <!-- <exclude>javax.validation:validation-api:jar</exclude> -->
                 <!-- <exclude>javax.ws.rs:javax.ws.rs-api:jar</exclude> -->
                 <exclude>log4j:log4j:jar</exclude>
@@ -117,7 +117,7 @@
                 <exclude>org.apache.hadoop:hadoop-auth:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-common:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-hdfs:jar</exclude>
-                <exclude>org.apache.htrace:htrace-core:jar</exclude>
+                <!-- <exclude>org.apache.htrace:htrace-core:jar</exclude> -->
                 <exclude>org.apache.logging.log4j:log4j-api:jar</exclude>
                 <exclude>org.apache.zookeeper:zookeeper:jar</exclude>
                 <exclude>org.aspectj:aspectjweaver:jar</exclude>

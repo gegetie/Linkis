@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 public class UJESClientImplTestJ{
     public static void main(String[] args){
-        DWSClientConfig clientConfig = ((DWSClientConfigBuilder) (DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://localhost:port")
+        DWSClientConfig clientConfig = ((DWSClientConfigBuilder) (DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-01:9001")
                 .connectionTimeout(30000).discoveryEnabled(true)
                 .discoveryFrequency(1, TimeUnit.MINUTES)
                 .loadbalancerEnabled(true).maxConnectionSize(5)

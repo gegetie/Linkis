@@ -98,11 +98,8 @@
                 <exclude>com.netflix.servo:servo-core:jar</exclude>
                 <exclude>com.ning:async-http-client:jar</exclude>
                 <exclude>com.sun.jersey.contribs:jersey-apache-client4:jar</exclude>
-                <exclude>com.sun.jersey:jersey-client:jar</exclude>
-                <exclude>com.sun.jersey:jersey-core:jar</exclude>
                 <exclude>com.sun.jersey:jersey-json:jar</exclude>
                 <exclude>com.sun.jersey:jersey-server:jar</exclude>
-                <exclude>com.sun.jersey:jersey-servlet:jar</exclude>
                 <exclude>com.sun.xml.bind:jaxb-impl:jar</exclude>
                 <exclude>com.thoughtworks.xstream:xstream:jar</exclude>
                 <exclude>com.webank.wedatasphere.linkis:linkis-common:jar</exclude>
@@ -120,7 +117,6 @@
                 <exclude>commons-net:commons-net:jar</exclude>
                 <exclude>commons-pool:commons-pool:jar</exclude>
                 <exclude>io.micrometer:micrometer-core:jar</exclude>
-                <exclude>io.netty:netty-all:jar</exclude>
                 <exclude>io.netty:netty-buffer:jar</exclude>
                 <exclude>io.netty:netty-codec:jar</exclude>
                 <exclude>io.netty:netty-codec-http:jar</exclude>
@@ -135,8 +131,7 @@
                 <exclude>javax.activation:activation:jar</exclude>
                 <exclude>javax.annotation:javax.annotation-api:jar</exclude>
                 <exclude>javax.inject:javax.inject:jar</exclude>
-                <exclude>javax.servlet:javax.servlet-api:jar</exclude>
-                <exclude>javax.servlet.jsp:jsp-api:jar</exclude>
+               <!--  <exclude>javax.servlet:javax.servlet-api:jar</exclude> -->
                 <exclude>javax.validation:validation-api:jar</exclude>
                 <exclude>javax.websocket:javax.websocket-api:jar</exclude>
                 <exclude>javax.ws.rs:javax.ws.rs-api:jar</exclude>
@@ -150,8 +145,6 @@
                 <exclude>org.apache.commons:commons-compress:jar</exclude>
                 <exclude>org.apache.commons:commons-math:jar</exclude>
                 <exclude>org.apache.commons:commons-math3:jar</exclude>
-                <exclude>org.apache.curator:curator-framework:jar</exclude>
-                <exclude>org.apache.curator:curator-recipes:jar</exclude>
                 <exclude>org.apache.directory.api:api-asn1-api:jar</exclude>
                 <exclude>org.apache.directory.api:api-util:jar</exclude>
                 <exclude>org.apache.directory.server:apacheds-i18n:jar</exclude>
@@ -160,12 +153,11 @@
                 <exclude>org.apache.hadoop:hadoop-auth:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-common:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-hdfs:jar</exclude>
-                <exclude>org.apache.htrace:htrace-core:jar</exclude>
+                <!-- <exclude>org.apache.htrace:htrace-core:jar</exclude> -->
                 <exclude>org.apache.logging.log4j:log4j-api:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-core:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-jul:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-slf4j-impl:jar</exclude>
-                <exclude>org.apache.zookeeper:zookeeper:jar</exclude>
                 <exclude>org.aspectj:aspectjweaver:jar</exclude>
                 <exclude>org.bouncycastle:bcpkix-jdk15on:jar</exclude>
                 <exclude>org.bouncycastle:bcprov-jdk15on:jar</exclude>
@@ -185,7 +177,6 @@
                 <exclude>org.eclipse.jetty:jetty-server:jar</exclude>
                 <exclude>org.eclipse.jetty:jetty-servlet:jar</exclude>
                 <exclude>org.eclipse.jetty:jetty-servlets:jar</exclude>
-                <exclude>org.eclipse.jetty:jetty-util:jar</exclude>
                 <exclude>org.eclipse.jetty:jetty-webapp:jar</exclude>
                 <exclude>org.eclipse.jetty:jetty-xml:jar</exclude>
                 <exclude>org.eclipse.jetty.websocket:javax-websocket-client-impl:jar</exclude>
@@ -233,7 +224,6 @@
                 <exclude>org.jvnet:tiger-types:jar</exclude>
                 <exclude>org.latencyutils:LatencyUtils:jar</exclude>
                 <exclude>org.mortbay.jasper:apache-el:jar</exclude>
-                <exclude>org.mortbay.jetty:jetty-util:jar</exclude>
                 <exclude>org.ow2.asm:asm-analysis:jar</exclude>
                 <exclude>org.ow2.asm:asm-commons:jar</exclude>
                 <exclude>org.ow2.asm:asm-tree:jar</exclude>

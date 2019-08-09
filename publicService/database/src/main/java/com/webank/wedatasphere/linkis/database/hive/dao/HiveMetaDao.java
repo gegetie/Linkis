@@ -23,6 +23,8 @@ import java.util.Map;
  */
 public interface HiveMetaDao {
     List<String> getDbsByUser(String userName);
+    List<String> getAllDbs();
+    List<Map<String, Object>> getTablesByDbName(Map<String, String> map);
     List<Map<String, Object>> getTablesByDbNameAndUser(Map<String, String> map);
     Long getPartitionSize(Map<String, String> map);
     List<String> getPartitions(Map<String, String> map);

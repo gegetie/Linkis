@@ -147,7 +147,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public JsonNode getDbs(String userName) throws Exception {
         //TODO Also need to write SQL authorized by ROLE(还需要写通过ROLE授权的SQL)
-        List<String> dbs = hiveMetaDao.getDbsByUser(userName);
+        //List<String> dbs = hiveMetaDao.getDbsByUser(userName);
+        List<String> dbs = hiveMetaDao.getAllDbs();
         ArrayNode dbsNode = jsonMapper.createArrayNode();
         for(String db : dbs){
             ObjectNode dbNode = jsonMapper.createObjectNode();
@@ -160,7 +161,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public JsonNode getDbsWithTables(String userName) throws Exception {
         ArrayNode dbNodes = jsonMapper.createArrayNode();
-        List<String> dbs = hiveMetaDao.getDbsByUser(userName);
+        List<String> dbs = hiveMetaDao.getAllDbs();
         for(String db : dbs){
             ObjectNode dbNode = jsonMapper.createObjectNode();
             dbNode.put("databaseName", db);
@@ -177,7 +178,7 @@ public class DataSourceServiceImpl implements DataSourceService {
             Map<String, String> map = Maps.newHashMap();
             map.put("dbName", database);
             map.put("userName", userName);
-            listTables =hiveMetaDao.getTablesByDbNameAndUser(map);
+            listTables =hiveMetaDao.getTablesByDbName(map);
         } catch (Throwable e) {
             hiveDB = null;
             logger.error("Failed to list Tables:", e);

@@ -91,7 +91,7 @@
                 <exclude>commons-lang:commons-lang:jar</exclude>
                 <exclude>commons-logging:commons-logging:jar</exclude>
                 <exclude>commons-net:commons-net:jar</exclude>
-                <exclude>io.netty:netty:jar</exclude>
+                <!-- <exclude>io.netty:netty:jar</exclude>
                 <exclude>io.netty:netty-all:jar</exclude>
                 <exclude>io.netty:netty-buffer:jar</exclude>
                 <exclude>io.netty:netty-codec:jar</exclude>
@@ -99,15 +99,15 @@
                 <exclude>io.netty:netty-common:jar</exclude>
                 <exclude>io.netty:netty-handler:jar</exclude>
                 <exclude>io.netty:netty-transport:jar</exclude>
-                <exclude>io.netty:netty-transport-native-epoll:jar</exclude>
+                <exclude>io.netty:netty-transport-native-epoll:jar</exclude> -->
                 <exclude>io.reactivex:rxjava:jar</exclude>
                 <exclude>io.reactivex:rxnetty:jar</exclude>
                 <exclude>io.reactivex:rxnetty-contexts:jar</exclude>
                 <exclude>io.reactivex:rxnetty-servo:jar</exclude>
                 <exclude>javax.annotation:javax.annotation-api:jar</exclude>
                 <exclude>javax.inject:javax.inject:jar</exclude>
-                <exclude>javax.servlet:javax.servlet-api:jar</exclude>
-                <exclude>javax.servlet.jsp:jsp-api:jar</exclude>
+                <!-- <exclude>javax.servlet:javax.servlet-api:jar</exclude>
+                <exclude>javax.servlet.jsp:jsp-api:jar</exclude> -->
                 <exclude>log4j:log4j:jar</exclude>
                 <exclude>net.databinder.dispatch:dispatch-core_2.11:jar</exclude>
                 <exclude>net.databinder.dispatch:dispatch-json4s-jackson_2.11:jar</exclude>
@@ -124,7 +124,7 @@
                 <exclude>org.apache.hadoop:hadoop-auth:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-common:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-hdfs:jar</exclude>
-                <exclude>org.apache.htrace:htrace-core:jar</exclude>
+                 <!-- <exclude>org.apache.htrace:htrace-core:jar</exclude> -->
                 <exclude>org.apache.httpcomponents:httpclient:jar</exclude>
                 <exclude>org.apache.httpcomponents:httpcore:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-api:jar</exclude>

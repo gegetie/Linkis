@@ -30,22 +30,23 @@ import com.webank.wedatasphere.linkis.ujes.client.request.{JobExecuteAction, Res
 import org.apache.commons.io.IOUtils
 
 /**
+ * 
   * created by cooperyang on 2019/5/23.
   */
 object UJESClientImplTest extends App {
 
-  val clientConfig = DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://localhost:port")
+  val clientConfig = DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-01:9001")
     .connectionTimeout(30000).discoveryEnabled(true)
     .discoveryFrequency(1, TimeUnit.MINUTES)
     .loadbalancerEnabled(true).maxConnectionSize(5)
     .retryEnabled(false).readTimeout(30000)
-    .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("")
-    .setAuthTokenValue("").setDWSVersion("v1").build()
+    .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("hdfs")
+    .setAuthTokenValue("hdfs").setDWSVersion("v1").build()
   val client = UJESClient(clientConfig)
 
   val jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
-    .addExecuteCode("show tables")
-    .setEngineType(EngineType.SPARK).setUser("").build())
+    .addExecuteCode("select count(1) from dm_boss_dap_woody.base_person ;")
+    .setEngineType(EngineType.HIVE).setUser("hdfs").build())
   println("execId: " + jobExecuteResult.getExecID + ", taskId: " + jobExecuteResult.taskID)
   var status = client.status(jobExecuteResult)
   while(!status.isCompleted) {

@@ -26,13 +26,22 @@ import com.webank.wedatasphere.linkis.server._
 class LDAPUserRestful extends UserPwdAbstractUserRestful with Logging {
 
   override def login(userName: String, password: String): Message = Utils.tryCatch{
+    com.webank.wedatasphere.linkis.common.utils.BossLDAPUtils.login(userName.toString, password.toString)
+    "login successful(登录成功)！".data("userName", userName).data("isAdmin", false).data("loginNum", 4).data("lastLoginTime", System.currentTimeMillis)
+  }{ t =>
+    warn("wrong user name or password(用户名或密码错误)！", t)
+    Message.error("wrong user name or password(用户名或密码错误)！")
+  }
+  
+  /**
+  override def login(userName: String, password: String): Message = Utils.tryCatch{
     LDAPUtils.login(userName.toString, password.toString)
     "login successful(登录成功)！".data("userName", userName).data("isAdmin", false).data("loginNum", 4).data("lastLoginTime", System.currentTimeMillis)
   }{ t =>
     warn("wrong user name or password(用户名或密码错误)！", t)
     Message.error("wrong user name or password(用户名或密码错误)！")
   }
-
+	**/
   override def userInfo(gatewayContext: GatewayContext): Message = {
     ""
   }

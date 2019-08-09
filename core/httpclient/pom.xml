@@ -45,7 +45,7 @@
                     <artifactId>hadoop-auth</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency> 
     </dependencies>
 
     <build>

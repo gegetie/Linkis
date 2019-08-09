@@ -33,20 +33,32 @@
             <groupId>com.webank.wedatasphere.linkis</groupId>
             <artifactId>linkis-gateway-httpclient-support</artifactId>
             <version>${linkis.version}</version>
-        </dependency>
+         </dependency>
         <dependency>
             <groupId>com.webank.wedatasphere.linkis</groupId>
             <artifactId>linkis-protocol</artifactId>
             <version>${linkis.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.webank.wedatasphere.linkis</groupId>
-                    <artifactId>linkis-common</artifactId>
-                </exclusion>
+            	<exclusion>
+            		<groupId>io.netty</groupId>
+            		<artifactId>netty-all</artifactId>
+            	</exclusion>
+            	<exclusion>
+            		<groupId>io.netty</groupId>
+            		<artifactId>netty</artifactId>
+            	</exclusion>
+            	<exclusion>
+            		<groupId>com.webank.wedatasphere.linkis</groupId>
+            		<artifactId>linkis-common</artifactId>
+            	</exclusion>
             </exclusions>
         </dependency>
-    </dependencies>
-
+         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.9.2.Final</version>
+        </dependency>
+         </dependencies>
     <build>
         <plugins>
             <plugin>
