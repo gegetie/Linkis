@@ -86,7 +86,7 @@
                 <exclude>commons-collections:commons-collections:jar</exclude>
                 <exclude>commons-configuration:commons-configuration:jar</exclude>
                 <exclude>commons-daemon:commons-daemon:jar</exclude>
-                <!-- <exclude>commons-dbcp:commons-dbcp:jar</exclude> -->
+                <!--<exclude>commons-dbcp:commons-dbcp:jar</exclude>-->
                 <exclude>commons-digester:commons-digester:jar</exclude>
                 <exclude>commons-httpclient:commons-httpclient:jar</exclude>
                 <exclude>commons-io:commons-io:jar</exclude>
@@ -187,6 +187,7 @@
                 <exclude>org.yaml:snakeyaml:jar</exclude>
                 <exclude>xerces:xercesImpl:jar</exclude>
                 <exclude>xmlenc:xmlenc:jar</exclude>
+                <exclude>org.apache.spark:spark*</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
