@@ -61,7 +61,7 @@ import java.util.function.LongFunction;
 @Service
 public class DataSourceServiceImpl implements DataSourceService {
 
-    Logger logger = Logger.getLogger(HiveUtils.class);
+    Logger logger = Logger.getLogger(DataSourceServiceImpl.class);
 
     private static Hive hiveDB = null;
     private static FileSystem rootHdfs = null;
@@ -201,7 +201,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     public JsonNode queryTableMeta(String dbName, String tableName, String userName) {
-        logger.info("getTable:" + userName);
+        logger.info("queryTableMeta:" +dbName+"."+tableName+","+ userName);
         Map<String, String> param = Maps.newHashMap();
         param.put("dbName", dbName);
         param.put("tableName", tableName);
@@ -229,18 +229,19 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     public JsonNode getTableSize(String dbName, String tableName, String userName) {
-        logger.info("getTable:" + userName);
+        logger.info("getTableSize args:" +dbName+"."+tableName+","+ userName);
         Table table = null;
         try {
             table = getHive().getTable(dbName, tableName, true);
         } catch (HiveException e) {
             logger.error("getTable error:", e);
         }
-
+       
         String tableSize = "";
         if(table != null){
             try{
                 FileStatus tableFile = getRootHdfs().getFileStatus(table.getDataLocation());
+                logger.info("tableFile:" +tableFile.getPath().toString()+", is dir "+ tableFile.isDirectory());
                 if(tableFile.isDirectory()){
                     tableSize = ByteTimeUtils.bytesToString(getRootHdfs().getContentSummary(tableFile.getPath()).getLength());
                 } else {
@@ -254,6 +255,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         ObjectNode sizeJson = jsonMapper.createObjectNode();
         sizeJson.put("size", tableSize);
         sizeJson.put("tableName", dbName + "." + tableName);
+        logger.info("getTableSize rs:" +sizeJson.toString());
         return sizeJson;
     }
 

@@ -30,6 +30,7 @@ object BossLDAPUtils extends Logging {
   val url = CommonVars("wds.linkis.ldap.proxy.url", "").getValue
   val baseDN = CommonVars("wds.linkis.ldap.proxy.baseDN", "").getValue
   def login(userID: String, password: String): Unit = {
+    info(s"wds.linkis.ldap.proxy.url: $url")
     var bossLdapService = new BossLdapService(url, baseDN)
     if (!bossLdapService.authenricate(userID, password).isValid()) {
       throw new NamingException(s"user $userID login fail.");

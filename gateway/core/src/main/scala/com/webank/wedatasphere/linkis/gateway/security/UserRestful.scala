@@ -50,7 +50,7 @@ abstract class AbstractUserRestful extends UserRestful {
       case "login" =>
         Utils.tryCatch {
           val loginUser = GatewaySSOUtils.getLoginUsername(gatewayContext)
-          Message.error(loginUser + "Already logged in, please log out before signing in(已经登录，请先退出再进行登录)！").data("redirectToIndex", true)
+          Message.error(loginUser + " Already logged in, please log out before signing in(已经登录，请先退出再进行登录)！").data("redirectToIndex", true)
         }(_ => login(gatewayContext))
       case "logout" => logout(gatewayContext)
       case "userInfo" => userInfo(gatewayContext)

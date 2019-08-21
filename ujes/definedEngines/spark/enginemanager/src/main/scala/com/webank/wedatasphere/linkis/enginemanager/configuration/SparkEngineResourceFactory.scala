@@ -31,10 +31,13 @@ class SparkEngineResourceFactory extends AbstractEngineResourceFactory {
   override protected def getRequestResource(properties: java.util.Map[String, String]): DriverAndYarnResource = {
     val executorNum = DWC_SPARK_EXECUTOR_INSTANCES.getValue(properties)
     new DriverAndYarnResource(
-      new LoadInstanceResource(ByteTimeUtils.byteStringAsBytes(DWC_SPARK_DRIVER_MEMORY.getValue(properties) + "G"),
+      new LoadInstanceResource(
+        ByteTimeUtils.byteStringAsBytes(DWC_SPARK_DRIVER_MEMORY.getValue(properties) + "G"),
         DWC_SPARK_DRIVER_CORES,
         1),
-      new YarnResource(ByteTimeUtils.byteStringAsBytes(DWC_SPARK_EXECUTOR_MEMORY.getValue(properties) * executorNum + "G"),
+      
+      new YarnResource(
+        ByteTimeUtils.byteStringAsBytes(DWC_SPARK_EXECUTOR_MEMORY.getValue(properties) * executorNum + "G"),
         DWC_SPARK_EXECUTOR_CORES.getValue(properties) * executorNum,
         0,
         DWC_QUEUE_NAME.getValue(properties))

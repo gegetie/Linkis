@@ -111,6 +111,7 @@ object YarnUtil extends Logging{
     }
 
     val realQueueName = "root." + queueName
+    info("realQueueName is "+ realQueueName)
     def getQueue(queues: JValue): Option[JValue] = queues match {
       case JArray(queue) =>
         queue.foreach { q =>
@@ -195,6 +196,5 @@ object YarnUtil extends Logging{
       } else throw new RMErrorException(111006, "Get the Yarn Application information exception.(获取Yarn Application信息异常)", t)
     })
   }
-
 
 }
