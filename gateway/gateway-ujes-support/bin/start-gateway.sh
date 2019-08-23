@@ -16,7 +16,7 @@ fi
 
 export EUREKA_SERVER_LOG_PATH=$HOME/logs
 export EUREKA_SERVER_HEAP_SIZE="2G"
-export EUREKA_SERVER_CLASS=${EUREKA_SERVER_CLASS:-com.webank.wedatasphere.linkis.DataWorkCloudApplication}
+export EUREKA_SERVER_CLASS=${EUREKA_SERVER_CLASS:-com.webank.wedatasphere.linkis.gateway.ujes.GatewayDataWorkCloudApplication}
 
 
 if [ $1 ];then

@@ -19,7 +19,6 @@ package com.webank.wedatasphere.linkis.gateway.ujes;
 import com.webank.wedatasphere.linkis.DataWorkCloudApplication;
 import com.webank.wedatasphere.linkis.server.conf.DataWorkCloudCustomExcludeFilter;
 
-
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -27,14 +26,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
  
- 
+/**
+ * Created by enjoyyin on 2018/8/6.
+ */
 @SpringBootApplication
 @EnableDiscoveryClient
 @RefreshScope
-@ComponentScan(basePackages = "com.webank.wedatasphere.linkis",
-        excludeFilters = @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {DataWorkCloudCustomExcludeFilter.class}))
-@ImportResource({"classpath:spring/applicationContext-boss-iuc-consumer.xml"})
+@ComponentScan(basePackages = "com.webank.wedatasphere.linkis", excludeFilters = @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {
+		DataWorkCloudCustomExcludeFilter.class }))
+@ImportResource({"classpath:dubbo.xml"})
 public class GatewayDataWorkCloudApplication extends DataWorkCloudApplication {
- 
 	 
-}
+ }

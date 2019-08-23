@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                         http://www.springframework.org/schema/beans/spring-beans.xsd
+                                         http://code.alibabatech.com/schema/dubbo
+                                         http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+	<dubbo:application name="datastar-linkis-gateway" />
+	
+	<dubbo:registry id="internalucRegistry" protocol="zookeeper" address="172.18.209.78:2181,172.18.192.166:2181,172.18.209.79:2181"
+                    group="dubbo/boss/internaluc"
+                    file="dubbo-registry-boss-internaluc.file"/>
+    <dubbo:reference id="ucPassportDubboService"
+                     interface="cn.techwolf.boss.internaluc.service.dubbo.UcPassportDubboService" version="1.0.0"
+                     check="false" registry="internalucRegistry" retries="1" timeout="1000"/>
+    <dubbo:reference id="ucOpLogDubboService" interface="cn.techwolf.boss.internaluc.service.dubbo.UcOpLogDubboService"
+                     version="1.0.0" check="false" registry="internalucRegistry" async="true"/>
+</beans>
