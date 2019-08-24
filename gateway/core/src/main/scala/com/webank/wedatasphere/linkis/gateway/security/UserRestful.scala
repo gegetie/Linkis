@@ -105,8 +105,10 @@ abstract class UserPwdAbstractUserRestful extends AbstractUserRestful {
       Message.error("password can not be blank(密码不能为空)！")
     } else {
       //warn: For easy to useing linkis,Admin skip login
-      if(GatewayConfiguration.ADMIN_USER.getValue.equals(userName.toString) && userName.toString.equals(password.toString)){
-          GatewaySSOUtils.setLoginUser(gatewayContext, userName.toString)
+      val adminPW =ConfigUserUtils.getAdminUser(userName.toString)
+      //判断是否管理员、管理员登录
+      if(StringUtils.isNotBlank(adminPW)&&adminPW.toString.equals(password.toString)){
+        GatewaySSOUtils.setLoginUser(gatewayContext, userName.toString)
           "login successful(登录成功)！".data("userName", userName)
             .data("isAdmin", true)
             .data("loginNum", 4)

@@ -124,7 +124,6 @@ class EntranceWebSocketService extends ServerEventService with EntranceEventList
        //TODO 需要进行二次权限校验
        info(s"You have switched the user, $event.getUser to $umUser")
      }
-    
     params.put(TaskConstant.UMUSER, umUser)
     val jobId = entranceServer.execute(params)
     jobIdToEventId synchronized jobIdToEventId.put(jobId, event.getId)

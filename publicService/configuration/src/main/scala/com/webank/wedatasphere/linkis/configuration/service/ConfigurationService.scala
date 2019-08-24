@@ -143,6 +143,7 @@ class ConfigurationService extends Logging {
   }
 
   def queryAppConfigWithGlobal(userName: String, creator: String, appName: String, isMerge: Boolean): ResponseQueryConfig = {
+    info("query app config with global by "+" userName:"+userName+" creator:"+creator+ " appName:"+appName)
     val config = new ResponseQueryConfig
     val globalMap = queryGolbalConfig(userName).getKeyAndValue
     val appMap = queryAppConfig(userName, null, appName).getKeyAndValue //Here is when isMerge=false(这里是为了isMerge=false的时候)
@@ -165,6 +166,7 @@ class ConfigurationService extends Logging {
   }
 
   def queryAppConfig(userName: String, creator: String, appName: String): ResponseQueryConfig = {
+    info("query app config by "+" userName:"+userName+" creator:"+creator+ " appName:"+appName)
     val appID: Long = configMapper.selectAppIDByAppName(appName)
     var creatorID: Long = null
     if (StringUtils.isBlank(creator) || creator == appName) creatorID = appID

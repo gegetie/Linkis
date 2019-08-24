@@ -1,7 +1,6 @@
 package com.webank.wedatasphere.linkis.gateway.ujes.sso.kanzhun;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URLEncoder;
 
 import javax.servlet.http.Cookie;
@@ -18,7 +17,6 @@ import cn.techwolf.boss.internaluc.model.dubbo.UcUserInfo;
 import cn.techwolf.boss.internaluc.service.dubbo.UcPassportDubboService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 @Component
 class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
@@ -34,31 +32,40 @@ class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
 
 	@Override
 	public String getUser(GatewayContext gatewayContext) {
-		String[] tucParams = gatewayContext.getRequest().getQueryParams().get("t_uc");
-		if (null == tucParams) {
-			((SpringCloudGatewayHttpResponse) gatewayContext.getResponse())
-					.addCookie(this.createCookie(TICKET_PATTEN + systemToken, null, -1, "/", null));
+		if(null==gatewayContext.getRequest().getCookies().get("t_datastar")) {
+			info("-------------未登陆----t_datastar is null-----");
+			((SpringCloudGatewayHttpResponse) gatewayContext.getResponse()).addCookie(this.createCookie(TICKET_PATTEN + systemToken, null, -1, "/", null));
 			return null;
 		}
-		String ticket = tucParams[0];
-		if (StringUtils.isBlank(ticket)) {
+		String ticket = gatewayContext.getRequest().getCookies().get("t_datastar")[0].getValue();
+		info("t_datastar:"+gatewayContext.getRequest().getCookies().get("t_datastar")[0].getValue());
+ 		if (StringUtils.isBlank(ticket)) {
+			info("-------------未登陆---ticket is null------");
 			return null;
 		}
 		info("get user by ticket,ticket:"+ticket+ " systemToken:"+this.systemToken);
 		UcUserInfo user = this.ucPassportDubboService.getUserByTicket(ticket, this.systemToken);
 		if (null != user) {
 			info("get user by ticket,user:"+user.toString());
-			return user.getEmail();
+			return user.getEmail().split("@")[0];
 		}
 		return null;
 	}
 
 	@Override
-	public String redirectTo(URI requestUrl) {
-		String callBack = String.format(this.passportUrl + "?token=%s&callback=%s", this.systemToken,
-				this.encodeUrl(this.getUrl(requestUrl)));
+	public String redirectTo(GatewayContext gatewayContext ) {
+		String[] refererArry = gatewayContext.getRequest().getHeaders().get("Referer");
+		String referer=null;
+		if(null!=refererArry) {
+			referer = refererArry[0];
+		}else {
+			referer = gatewayContext.getRequest().getURI().getHost();
+		}
+ 		String callBack = String.format(this.passportUrl + "?token=%s&callback=%s", this.systemToken,
+				this.encodeUrl(this.getUrl(referer)));
 		return callBack;
 	}
+	
 
 	@Override
 	public void logout(GatewayContext gatewayContext) {
@@ -86,12 +93,13 @@ class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
 	 * @param request
 	 * @return url
 	 */
-	private String getUrl(URI requestUrl) {
-		String url = requestUrl.toString();
+	private String getUrl(String url) {
 		url = StringUtils.substringBefore(url, "&t_uc=");
 		url = StringUtils.substringBefore(url, "?t_uc=");
 		return url;
 	}
+	
+	
 
 	/**
 	 * url encode

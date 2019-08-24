@@ -94,12 +94,12 @@ object SecurityFilter {
           GatewaySSOUtils.setLoginUser(gatewayContext.getRequest, user)
           true
         } else if(isPassAuthRequest) {
-          gatewayContext.getResponse.redirectTo(SSOInterceptor.getSSOInterceptor.redirectTo(gatewayContext.getRequest.getURI))
+          gatewayContext.getResponse.redirectTo(SSOInterceptor.getSSOInterceptor.redirectTo(gatewayContext))
           gatewayContext.getResponse.sendResponse()
           false
         } else {
           filterResponse(gatewayContext, Message.noLogin("You are not logged in, please login first(您尚未登录，请先登录)!")
-            .data("enableSSO", true).data("SSOURL", SSOInterceptor.getSSOInterceptor.redirectTo(gatewayContext.getRequest.getURI)) << gatewayContext.getRequest.getRequestURI)
+            .data("enableSSO", true).data("SSOURL", SSOInterceptor.getSSOInterceptor.redirectTo(gatewayContext)) << gatewayContext.getRequest.getRequestURI)
           false
         }
       } else {

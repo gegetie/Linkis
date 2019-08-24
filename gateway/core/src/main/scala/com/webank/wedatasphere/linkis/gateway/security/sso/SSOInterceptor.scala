@@ -23,7 +23,7 @@ trait SSOInterceptor {
     * @param requestUrl
     * @return
     */
-  def redirectTo(requestUrl: URI): String
+  def redirectTo(gatewayContext: GatewayContext): String
 
   /**
     * gateway退出时，会调用此接口，以保证gateway清除cookie后，SSO单点登录也会把登录信息清除掉
