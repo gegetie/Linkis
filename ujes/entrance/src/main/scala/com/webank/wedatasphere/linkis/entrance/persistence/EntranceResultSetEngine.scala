@@ -26,11 +26,13 @@ import com.webank.wedatasphere.linkis.storage.fs.FileSystem
 import com.webank.wedatasphere.linkis.storage.resultset.{ResultSetFactory, ResultSetWriter}
 import com.webank.wedatasphere.linkis.storage.utils.{FileSystemUtils, StorageUtils}
 import org.apache.commons.io.IOUtils
+import com.webank.wedatasphere.linkis.common.utils.Logging
+
 
 /**
   * Created by enjoyyin on 2018/11/1.
   */
-class EntranceResultSetEngine extends ResultSetEngine {
+class EntranceResultSetEngine extends ResultSetEngine with Logging {
   override def persistResultSet(job: Job, executeCompleted: OutputExecuteResponse): String = executeCompleted match {
     case AliasOutputExecuteResponse(alias, output) =>
       if(ResultSetFactory.getInstance.isResultSetPath(output)) output
@@ -50,8 +52,9 @@ class EntranceResultSetEngine extends ResultSetEngine {
         if(storePath != null) {
           //TODO Remove _ stitching(去掉_拼接)
           val path = if(alias.contains("_")) resultSet.getResultSetPath(new FsPath(storePath),  alias) else resultSet.getResultSetPath(new FsPath(storePath),  "_" + alias)
-
+          info("persist result set to "+path.toString())
           FileSystemUtils.createNewFile(path,true)
+          //FileSystemUtils.createNewFile(path,true,"777")
           val writer = ResultSetWriter.getResultSetWriter(resultSet, 0, path,StorageUtils.getJvmUser)
           Utils.tryFinally {
             writer.addMetaDataAndRecordString(output)

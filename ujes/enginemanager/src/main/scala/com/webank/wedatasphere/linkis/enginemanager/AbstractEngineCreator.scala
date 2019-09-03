@@ -77,7 +77,7 @@ abstract class AbstractEngineCreator extends EngineCreator {
     var dwcConf = Map("ticketId" -> ticketId, "creator" -> request.creator, "user" -> request.user) ++:
       EngineCallback.callbackToMap(EngineCallback(Sender.getThisServiceInstance.getApplicationName, Sender.getThisServiceInstance.getInstance))
     if(request.properties.exists{case (k, v) => k.contains(" ") || (v != null && v.contains(" "))})
-      throw new EngineManagerErrorException(30000, "Startup parameters contain spaces!(启动参数中包含空格！)")
+      throw new EngineManagerErrorException(30000, "Startup parameters contain spaces!(启动参数中包含空格！)"+request.properties.toMap)
     dwcConf = dwcConf ++: request.properties.toMap
     parser.setDWCConf(dwcConf)
     val engine = createEngine(processEngineBuilder,parser)

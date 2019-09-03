@@ -596,6 +596,9 @@ public class FsRestfulApi implements FsRestfulRemote {
             @QueryParam("charset") String charset,
             @QueryParam("outputFileType") String outputFileType,
             @QueryParam("outputFileName") String outputFileName) throws WorkSpaceException, IOException {
+    		
+    		int resultsetExcelLimit =  Integer.valueOf(WorkSpaceConfiguration.RESULTSET_EXCEL_LIMIT.getValue().toString());
+    				
         InputStream inputStream = null;
         ByteArrayOutputStream os = null;
         ServletOutputStream outputStream = null;
@@ -636,7 +639,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                 if (metaData instanceof TableMetaData) {
                     TableMetaData tableMetaData = (TableMetaData) metaData;
                     csvfsWriter.addMetaData(tableMetaData);
-                    while (resultSetReader.hasNext() && index < 5000) {
+                    while (resultSetReader.hasNext() && index < resultsetExcelLimit) {
                         index +=1;
                         csvfsWriter.addRecord(resultSetReader.getRecord());
                     }
@@ -648,7 +651,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                         stringBuilder.append(lineMetaData.getMetaData());
                         stringBuilder.append("\n");
                     }
-                    while (resultSetReader.hasNext() && index < 5000) {
+                    while (resultSetReader.hasNext() && index < resultsetExcelLimit) {
                         index +=1;
                         LineRecord lineRecord = (LineRecord) resultSetReader.getRecord();
                         stringBuilder.append(lineRecord.getLine());
@@ -664,7 +667,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                 response.addHeader("Content-Type", Constants.XLSXRESPONSE);
                 excelFsWriter = ExcelFsWriter.getExcelFsWriter(Constants.FILEDEFAULTCHARSET, Constants.DEFAULTSHEETNAME, Constants.DEFAULTDATETYPE);
                 excelFsWriter.addMetaData(tableMetaData);
-                while (resultSetReader.hasNext() && index < 5000) {
+                while (resultSetReader.hasNext() && index < resultsetExcelLimit) {
                     index +=1;
                     excelFsWriter.addRecord(resultSetReader.getRecord());
                 }

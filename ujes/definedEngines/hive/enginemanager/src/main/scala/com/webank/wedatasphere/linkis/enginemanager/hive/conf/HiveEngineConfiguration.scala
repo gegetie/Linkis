@@ -29,7 +29,7 @@ object HiveEngineConfiguration {
       "-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps",
       "Specify the option parameter of the HiveCli process (please modify it carefully!!!)(指定HiveCli进程的option参数（请谨慎修改！！！）)")
     val HIVE_CLIENT_EXTRACLASSPATH = CommonVars("hive.client.extraClassPath", "/appcom/commonlib/webank_bdp_udf.jar", "Specify the full path of the user-defined jar package (multiple separated by English)(指定用户自定义的jar包全路径（多个以英文,分隔）。)")
-
+    
     val HIVE_SESSION_HOOK = CommonVars("wds.linkis.engine.hive.session.hook", "")
 
     val HIVE_CAPACITY = CommonVars("wds.linkis.query.hive.capacity", 100)

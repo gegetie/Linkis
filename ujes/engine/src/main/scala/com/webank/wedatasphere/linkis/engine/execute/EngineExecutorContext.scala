@@ -142,6 +142,7 @@ class EngineExecutorContext(engineExecutor: EngineExecutor) extends Logging{
     val fileName = if(StringUtils.isEmpty(alias)) "_" + aliasNum.getAndIncrement() else alias + "_" + aliasNum.getAndIncrement()
     val resultSetPath = resultSet.getResultSetPath(new FsPath(filePath), fileName)
     val resultSetWriter = ResultSetWriter.getResultSetWriter(resultSet, ENGINE_RESULT_SET_MAX_CACHE.getValue.toLong, resultSetPath)
+    //val resultSetWriter = ResultSetWriter.getResultSetWriter(resultSet, 0, resultSetPath)
     resultSetWriters synchronized resultSetWriters += resultSetWriter
     resultSetWriter
   }
