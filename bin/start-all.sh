@@ -105,18 +105,31 @@ isSuccess "End to start Public Service"
 echo "<-------------------------------->"
 sleep 3
 
+<<<<<<< HEAD
 #metadata
 echo "<-------------------------------->"
 echo "Begin to start metadata"
 DATABASE_NAME="metadata"
 DATABASE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${DATABASE_NAME}/bin
 DATABASE_START_CMD="if [ -d ${DATABASE_BIN} ];then cd ${DATABASE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-database.sh > /dev/null;else echo 'WARNING:Metadata will not start';fi"
+=======
+#database
+echo "<-------------------------------->"
+echo "Begin to start Database"
+DATABASE_NAME="database"
+DATABASE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${DATABASE_NAME}/bin
+DATABASE_START_CMD="if [ -d ${DATABASE_BIN} ];then cd ${DATABASE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-database.sh > /dev/null;else echo 'WARNING:Database will not start';fi"
+>>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 if [ -n "${DATABASE_INSTALL_IP}" ];then
     ssh ${DATABASE_INSTALL_IP} "${DATABASE_START_CMD}"
 else
     ssh ${local_host} "${DATABASE_START_CMD}"
 fi
+<<<<<<< HEAD
 isSuccess  "End to start Metadata"
+=======
+isSuccess  "End to start Database"
+>>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 echo "<-------------------------------->"
 sleep 3
 

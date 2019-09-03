@@ -300,9 +300,15 @@ if [[ '1' = "$INSTALL_MODE" ]];then
 	exit 0
 fi
 
+<<<<<<< HEAD
 ##linkis-metadata install
 PACKAGE_DIR=linkis/linkis-metadata
 SERVERNAME=linkis-metadata
+=======
+##linkis-database install
+PACKAGE_DIR=linkis/linkis-database
+SERVERNAME=linkis-database
+>>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 SERVER_IP=$DATABASE_INSTALL_IP
 SERVER_PORT=$DATABASE_PORT
 SERVER_HOME=$LINKIS_INSTALL_HOME
