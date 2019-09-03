@@ -39,22 +39,22 @@ fi
 }
 
 function checkPythonAndJava(){
-	python --version
-	isSuccess "execute python --version"
-	java -version
-	isSuccess "execute java --version"
+  python --version
+  isSuccess "execute python --version"
+  java -version
+  isSuccess "execute java --version"
 }
 
 function checkHadoopAndHive(){
-	hdfs version
-	isSuccess "execute hdfs version"
-	hive --help
-	isSuccess "execute hive -h"
+  hdfs version
+  isSuccess "execute hdfs version"
+  hive --help
+  isSuccess "execute hive -h"
 }
 
 function checkSpark(){
-	spark-submit --version
-	isSuccess "execute spark-submit --version"
+  spark-submit --version
+  isSuccess "execute spark-submit --version"
 }
 
 ##install env:expect,
@@ -255,11 +255,11 @@ echo "<----------------$SERVERNAME:end------------------->"
 
 ##init db
 if [[ '1' = "$MYSQL_INSTALL_MODE" ]];then
-	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
-	isSuccess "source linkis_ddl.sql"
-	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
-	isSuccess "source linkis_dml.sql"
-	echo "Rebuild the table"
+  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
+  isSuccess "source linkis_ddl.sql"
+  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
+  isSuccess "source linkis_dml.sql"
+  echo "Rebuild the table"
 fi
 
 
@@ -296,19 +296,13 @@ echo "<----------------$SERVERNAME:end------------------->"
 ##PythonEntrance install end
 
 if [[ '1' = "$INSTALL_MODE" ]];then
-	echo "Lite install end"
-	exit 0
+  echo "Lite install end"
+  exit 0
 fi
 
-<<<<<<< HEAD
 ##linkis-metadata install
 PACKAGE_DIR=linkis/linkis-metadata
 SERVERNAME=linkis-metadata
-=======
-##linkis-database install
-PACKAGE_DIR=linkis/linkis-database
-SERVERNAME=linkis-database
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 SERVER_IP=$DATABASE_INSTALL_IP
 SERVER_PORT=$DATABASE_PORT
 SERVER_HOME=$LINKIS_INSTALL_HOME
@@ -358,12 +352,12 @@ echo "<----------------$SERVERNAME:end------------------->"
 
 
 if [[ '2' = "$INSTALL_MODE" ]];then
-	echo "Simple install end"
-	exit 0
+  echo "Simple install end"
+  exit 0
 fi
 
 if [[ '3' != "$INSTALL_MODE" ]];then
-	exit 0
+  exit 0
 fi
 
 ##SparkEM install
