@@ -25,15 +25,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-<<<<<<< HEAD:metadata/pom.xml
     <name>linkis-metadata</name>
 
     <artifactId>linkis-metadata</artifactId>
-=======
-    <name>linkis-database</name>
-
-    <artifactId>linkis-database</artifactId>
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5:publicService/database/pom.xml
     <!--<properties>-->
         <!--<hive.version>1.2.1</hive.version>-->
     <!--</properties>-->

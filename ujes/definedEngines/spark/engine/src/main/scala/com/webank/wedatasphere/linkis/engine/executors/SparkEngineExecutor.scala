@@ -38,10 +38,7 @@ import com.webank.wedatasphere.linkis.storage.{LineMetaData, LineRecord}
 import org.apache.commons.lang.StringUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
-<<<<<<< HEAD
 import org.apache.spark.sql.types.{StructField, StructType}
-=======
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -138,13 +135,9 @@ class SparkEngineExecutor(val sc: SparkContext, id: Long, outputPrintLimit: Int,
     }
     info(s"Start to structure sparksql resultset")
     response
-<<<<<<< HEAD
   }{
     oldprogress = 0f
   }
-=======
-  }{}
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 
   override protected def executeCompletely(engineExecutorContext: EngineExecutorContext, code: String, completedLine: String): ExecuteResponse = {
     val newcode = completedLine + code
@@ -175,7 +168,6 @@ class SparkEngineExecutor(val sc: SparkContext, id: Long, outputPrintLimit: Int,
 
   override def resume(): Boolean = false
 
-<<<<<<< HEAD
   override def progress(): Float = if (jobGroup == null || engineExecutorContext.getTotalParagraph == 0) 0
   else {
     debug("request new progress for jobGroup is " + jobGroup + "old progress:" + oldprogress)
@@ -184,20 +176,11 @@ class SparkEngineExecutor(val sc: SparkContext, id: Long, outputPrintLimit: Int,
       oldprogress = newProgress
       newProgress
     }
-=======
-  override def progress(): Float =if (jobGroup == null || engineExecutorContext.getTotalParagraph == 0) 0
-  else {
-    (engineExecutorContext.getCurrentParagraph * 1f - 1f )/ engineExecutorContext.getTotalParagraph + JobProgressUtil.progress(sc,jobGroup)/engineExecutorContext.getTotalParagraph
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
   }
 
   override def getProgressInfo: Array[JobProgressInfo] = if (jobGroup == null) Array.empty
   else {
-<<<<<<< HEAD
     debug("request new progress info for jobGroup is " + jobGroup)
-=======
-    info("request new progress info for jobGroup is " + jobGroup)
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
     val progressInfoArray = ArrayBuffer[JobProgressInfo]()
     progressInfoArray ++= JobProgressUtil.getActiveJobProgressInfo(sc,jobGroup)
     progressInfoArray ++= JobProgressUtil.getCompletedJobProgressInfo(sc,jobGroup)
@@ -208,7 +191,6 @@ class SparkEngineExecutor(val sc: SparkContext, id: Long, outputPrintLimit: Int,
     ""
   }
 
-<<<<<<< HEAD
   override def close(): Unit = {
     sparkExecutors foreach {
       executor => Utils.tryCatch(executor.close){
@@ -216,9 +198,6 @@ class SparkEngineExecutor(val sc: SparkContext, id: Long, outputPrintLimit: Int,
       }
     }
   }
-=======
-  override def close(): Unit = {}
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 }
 
 object SQLSession extends Logging {
