@@ -39,8 +39,7 @@ class HiveEngineExecutorFactory extends EngineExecutorFactory {
   private val logger = LoggerFactory.getLogger(getClass)
   private val HIVE_QUEUE_NAME:String = "mapreduce.job.queuename"
   private val BDP_QUEUE_NAME:String = "wds.linkis.yarnqueue"
-  
-  private val HIVE_AUX_JARS_PATH = CommonVars("hive.aux.jars.path", "file:///opt/extjars/hive/venus.jar", "Specify the full path of the user-defined jar package (multiple separated by English)(指定用户自定义的jar包全路径（多个以英文,分隔）。)")
+  private val HIVE_AUX_JARS_PATH = CommonVars("hive.aux.jars.path", "", "Specify the full path of the user-defined jar package (multiple separated by English)(指定用户自定义的jar包全路径（多个以英文,分隔）。)")
       
   override def createExecutor(options: JMap[String, String]): EngineExecutor = {
     val hiveConf:HiveConf = HiveUtils.getHiveConf

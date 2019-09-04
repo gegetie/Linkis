@@ -1,1 +1,11 @@
+<<<<<<< HEAD
 /target/
+=======
+.*
+!.gitignore
+target
+*/.gitignore
+*.iml
+logs
+data
+>>>>>>> origin/master
