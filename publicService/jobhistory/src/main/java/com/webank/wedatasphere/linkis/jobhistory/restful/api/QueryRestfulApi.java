@@ -65,11 +65,10 @@ public class QueryRestfulApi{
 
     @GET
     @Path("/list")
-    public Response list(@Context HttpServletRequest req,@QueryParam("startDate") Long startDate,
+    public Response list(@QueryParam("umUser") String umUser,@QueryParam("loginUser") String loginUser,@Context HttpServletRequest req,@QueryParam("startDate") Long startDate,
                          @QueryParam("endDate") Long endDate,@QueryParam("status") String status,
                          @QueryParam("pageNow") Integer pageNow,@QueryParam("pageSize") Integer pageSize,
                          @QueryParam("taskID") Long taskID,@QueryParam("executeApplicationName")String executeApplicationName) throws IOException, QueryException {
-        String username = SecurityFilter.getLoginUsername(req);
         if(StringUtils.isEmpty(pageNow)){
             pageNow = 1;
         }
@@ -92,7 +91,7 @@ public class QueryRestfulApi{
             instance.add(Calendar.DAY_OF_MONTH,1);
             eDate  = instance.getTime();
         }
-        List<QueryTask> queryTasks = queryService.search(taskID,username,status, sDate,eDate,executeApplicationName);
+        List<QueryTask> queryTasks = queryService.search(taskID,umUser,loginUser,status, sDate,eDate,executeApplicationName);
         PageInfo<QueryTask> pageInfo = new PageInfo<>(queryTasks);
         List<QueryTask> list = pageInfo.getList();
         long total = pageInfo.getTotal();

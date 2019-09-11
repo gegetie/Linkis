@@ -26,14 +26,14 @@
     </resultMap>
 
     <sql id="task_List">
-        id, `instance`, `exec_id`, `um_user`, `execution_code`, `progress`,`log_path`,
+        id, `instance`, `exec_id`, `um_user`,`login_user`, `execution_code`, `progress`,`log_path`,
         `result_location`,`status`,`created_time`,`updated_time`,`run_type`,`err_code`,`err_desc`,`execute_application_name`,`request_application_name`,`script_path`,`params`,`engine_instance`
     </sql>
 
     <insert id="insertTask" useGeneratedKeys="true" keyProperty="taskID" parameterType="com.webank.wedatasphere.linkis.jobhistory.entity.QueryTask">
         INSERT INTO linkis_task(<include refid="task_List"/>)
         VALUES (#{taskID},#{instance},#{execId},
-        #{umUser},#{executionCode},#{progress},
+        #{umUser},#{loginUser},#{executionCode},#{progress},
         #{logPath},#{resultLocation},#{status},
         #{createdTime},#{updatedTime},#{runType},
         #{errCode},#{errDesc},#{executeApplicationName},#{requestApplicationName},#{scriptPath},#{paramsJson},#{engineInstance})
@@ -46,6 +46,7 @@
             <if test="instance != null">and instance = #{instance}</if>
             <if test="execId != null">and exec_id = #{execId}</if>
             <if test="umUser != null">and um_user = #{umUser}</if>
+            <if test="loginUser != null">and login_user = #{loginUser}</if>
             <if test="engineInstance != null">and engine_instance = #{engineInstance}</if>
             <if test="executionCode != null">and execution_code = #{executionCode}</if>
             <if test="progress != null">and progress = #{progress}</if>
@@ -70,6 +71,7 @@
         <where>
             <if test="taskID != null">id = #{taskID}</if>
             <if test="umUser != null">and um_user = #{umUser}</if>
+            <if test="loginUser != null">and login_user = #{loginUser}</if>
             <if test="executeApplicationName != null">and execute_application_name = #{executeApplicationName}</if>
             <if test="startDate != null">and created_time BETWEEN #{startDate} AND #{endDate}</if>
             <if test="status != null">and <foreach collection="status" item="element" close=")" separator="," open="status in (">#{element}</foreach></if>
@@ -83,6 +85,7 @@
             <if test="instance != null">instance=#{instance},</if>
             <if test="execId != null">exec_id=#{execId},</if>
             <if test="umUser != null">um_user=#{umUser},</if>
+            <if test="loginUser != null">login_user=#{loginUser},</if>
             <if test="executionCode != null">execution_code=#{executionCode},</if>
             <if test="progress != null">progress=#{progress},</if>
             <if test="logPath != null">log_path=#{logPath},</if>

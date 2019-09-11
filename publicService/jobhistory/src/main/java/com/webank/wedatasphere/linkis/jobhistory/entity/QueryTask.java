@@ -26,6 +26,7 @@ public class QueryTask {
     private String instance;
     private String execId;
     private String umUser;
+    private String loginUser;
     private String engineInstance;
     private String executionCode;
     private Float progress;
@@ -191,7 +192,15 @@ public class QueryTask {
         return runType;
     }
 
-    public void setRunType(String runType) {
+    public String getLoginUser() {
+		return loginUser;
+	}
+
+	public void setLoginUser(String loginUser) {
+		this.loginUser = loginUser;
+	}
+
+	public void setRunType(String runType) {
         this.runType = runType;
     }
 

@@ -48,6 +48,11 @@ class CommonEntranceParser extends AbstractEntranceParser{
     val umUser = params.get(TaskConstant.UMUSER).asInstanceOf[String]
     if (umUser == null) throw new EntranceIllegalParamException(20005, "umUser can not be null")
     task.setUmUser(umUser)
+    
+    val loginUser = params.get(TaskConstant.LOGINUSER).asInstanceOf[String]
+    if (loginUser == null) throw new EntranceIllegalParamException(20005, "loginUser can not be null")
+    task.setLoginUser(loginUser)
+    
     var executionCode = params.get(TaskConstant.EXECUTIONCODE).asInstanceOf[String]
     val _params = params.get(TaskConstant.PARAMS)
     _params match {

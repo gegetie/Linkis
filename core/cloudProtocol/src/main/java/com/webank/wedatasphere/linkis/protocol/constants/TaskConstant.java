@@ -22,6 +22,7 @@ package com.webank.wedatasphere.linkis.protocol.constants;
  */
 public interface TaskConstant {
     String UMUSER = "umUser";
+    String LOGINUSER = "loginUser";
     String TASKTYPE = "taskType";
     String STORAGETYPE = "storageType";
     String EXECUTIONCODE = "executionCode";

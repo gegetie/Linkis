@@ -26,5 +26,6 @@ CREATE TABLE `linkis_task` (
   `engine_instance` varchar(50) DEFAULT NULL COMMENT 'An instance of engine, consists of IP address of the engine server and port',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4;
-
  
+alter table linkis_task add login_user varchar(50) DEFAULT NULL COMMENT 'User login name';
+

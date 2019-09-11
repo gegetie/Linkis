@@ -116,15 +116,19 @@ class EntranceWebSocketService extends ServerEventService with EntranceEventList
   def dealExecute(event:ServerEvent):Message = {
     val params = event.getData.map{case (k, v) => k -> v.asInstanceOf[Any]}  //TODO Convert to a suitable Map(转换成合适的Map)
     val websocketTag = event.getWebsocketTag
-    
-    //前端传入任务执行用户（gateway进行合法性校验），如果未传入，则以登录用户的身份执行
+      //前端传入任务执行用户（gateway进行合法性校验），如果未传入，则以登录用户的身份执行
      var umUser = event.getUser
-     if(null!=params.get(TaskConstant.UMUSER)){
-       umUser = params.get(TaskConstant.UMUSER).asInstanceOf[String];
-       //TODO 需要进行二次权限校验
-       info(s"You have switched the user, $event.getUser to $umUser")
-     }
+     var umUserswitched = params.get(TaskConstant.UMUSER)
+      umUserswitched match {
+        case Some(s) => {
+         //TODO 需要进行二次权限校验
+         umUser = params.get(TaskConstant.UMUSER).asInstanceOf[String]
+         info(s"You have switched the user, $event.getUser to $umUser")
+         }
+        case None => info(s"You have not switched the user, $event.getUser to $umUser")
+      }
     params.put(TaskConstant.UMUSER, umUser)
+    params.put(TaskConstant.LOGINUSER, event.getUser)
     val jobId = entranceServer.execute(params)
     jobIdToEventId synchronized jobIdToEventId.put(jobId, event.getId)
     websocketTagJobID synchronized websocketTagJobID.put(jobId, websocketTag)

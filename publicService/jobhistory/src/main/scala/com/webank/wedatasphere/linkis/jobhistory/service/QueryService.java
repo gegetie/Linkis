@@ -36,5 +36,5 @@ public interface QueryService {
 
     QueryTaskVO getTaskByID(Long taskID);
 
-    List<QueryTask> search(Long taskID, String username, String status, Date sDate, Date eDate, String executeApplicationName);
+    List<QueryTask> search(Long taskID, String umUser,String loginUser , String status, Date sDate, Date eDate, String executeApplicationName);
 }

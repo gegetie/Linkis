@@ -25,7 +25,8 @@ public class QueryTaskVO {
     private Long taskID;
     private String instance;
     private String execId;
-    private String umUser;
+    private String loginUser;
+	private String umUser;
     private String engineInstance;
     private String executionCode;
     private Float progress;
@@ -89,7 +90,13 @@ public class QueryTaskVO {
     public String getEngineInstance() {
         return engineInstance;
     }
+    public String getLoginUser() {
+  		return loginUser;
+  	}
 
+  	public void setLoginUser(String loginUser) {
+  		this.loginUser = loginUser;
+  	}
     public void setEngineInstance(String engineInstance) {
         this.engineInstance = engineInstance;
     }

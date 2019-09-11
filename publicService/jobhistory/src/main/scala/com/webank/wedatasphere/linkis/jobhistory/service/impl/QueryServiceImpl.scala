@@ -112,9 +112,9 @@ class QueryServiceImpl extends QueryService with Logging {
     }
   }
 
-  override def search(taskID: Long, username: String, status: String, sDate: Date, eDate: Date, executeApplicationName: String): util.List[QueryTask] = {
+  override def search(taskID: Long, umUser: String, loginUser : String, status: String, sDate: Date, eDate: Date, executeApplicationName: String): util.List[QueryTask] = {
     import scala.collection.JavaConversions._
     val split: util.List[String] = if (status != null) status.split(",").toList else null
-    taskMapper.search(taskID, username, split, sDate, eDate, executeApplicationName)
+    taskMapper.search(taskID, umUser, loginUser,split, sDate, eDate, executeApplicationName)
   }
 }
