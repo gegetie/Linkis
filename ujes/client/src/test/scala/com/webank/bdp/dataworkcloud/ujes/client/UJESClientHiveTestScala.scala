@@ -18,47 +18,50 @@
  * created by cooperyang on 2019/07/24.
  */
 
-package com.webank.wedatasphere.linkis.ujes.client
+package com.webank.bdp.dataworkcloud.ujes.client
 
 import java.util.concurrent.TimeUnit
-
 import com.webank.wedatasphere.linkis.common.utils.Utils
 import com.webank.wedatasphere.linkis.httpclient.dws.authentication.StaticAuthenticationStrategy
 import com.webank.wedatasphere.linkis.httpclient.dws.config.DWSClientConfigBuilder
+import com.webank.wedatasphere.linkis.ujes.client.UJESClient
 import com.webank.wedatasphere.linkis.ujes.client.request.JobExecuteAction.EngineType
 import com.webank.wedatasphere.linkis.ujes.client.request.{JobExecuteAction, ResultSetAction}
 import org.apache.commons.io.IOUtils
+import com.webank.wedatasphere.linkis.httpclient.dws.annotation.DWSHttpMessageResult
 
 /**
  * 
-  * created by cooperyang on 2019/5/23.
+  * created by cooperyang on 2019/5/23.com.webank.wedatasphere.linkis.ujes.client.UJESClientImplTest
   */
-object UJESClientImplTest extends App {
-
-  val clientConfig = DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-01:9001")
+object UJESClientHiveTestScala extends App {
+  
+  val clientConfig = DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-03:9001")
     .connectionTimeout(30000).discoveryEnabled(true)
     .discoveryFrequency(1, TimeUnit.MINUTES)
     .loadbalancerEnabled(true).maxConnectionSize(5)
-    .retryEnabled(false).readTimeout(30000)
-    .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("hdfs")
-    .setAuthTokenValue("hdfs").setDWSVersion("v1").build()
+    .retryEnabled(false).readTimeout(300000)
+    .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("zhuhui@kanzhun.com")
+    .setAuthTokenValue("Liangqilang1989").setDWSVersion("v1").build()
   val client = UJESClient(clientConfig)
 
   val jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
-    .addExecuteCode("select count(1) from dm_boss_dap_woody.base_person ;")
-    .setEngineType(EngineType.HIVE).setUser("hdfs").build())
+    .addExecuteCode("select * from dm_boss_dap_woody.base_person limit 10;")
+    .setEngineType(EngineType.HIVE).setUser("zhuhui@kanzhun.com").setUmUser("athena").build())
   println("execId: " + jobExecuteResult.getExecID + ", taskId: " + jobExecuteResult.taskID)
+ 
   var status = client.status(jobExecuteResult)
+  
   while(!status.isCompleted) {
     val progress = client.progress(jobExecuteResult)
-    val progressInfo = if(progress.getProgressInfo != null) progress.getProgressInfo.toList else List.empty
+    val progressInfo = if(progress.getProgressInfo != null) progress.getProgressInfo else List.empty
     println("progress: " + progress.getProgress + ", progressInfo: " + progressInfo)
     Utils.sleepQuietly(500)
     status = client.status(jobExecuteResult)
   }
   val jobInfo = client.getJobInfo(jobExecuteResult)
   val resultSet = jobInfo.getResultSetList(client).head
-  val fileContents = client.resultSet(ResultSetAction.builder().setPath(resultSet).setUser(jobExecuteResult.getUser).build()).getFileContent
+  val fileContents = client.resultSet(ResultSetAction.builder().setPath(resultSet).setUser(jobExecuteResult.getUser).setUmUser("athena").build()).getFileContent
   println("fileContents: " + fileContents)
   IOUtils.closeQuietly(client)
 }

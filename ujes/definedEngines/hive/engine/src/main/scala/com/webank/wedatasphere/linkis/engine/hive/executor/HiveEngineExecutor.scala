@@ -280,13 +280,6 @@ class HiveEngineExecutor(outputPrintLimit:Int,
       val totalSQLs = engineExecutorContext.getTotalParagraph
       val currentSQL = engineExecutorContext.getCurrentParagraph
       val currentBegin = (currentSQL - 1) / totalSQLs.asInstanceOf[Float]
-//      val number = HadoopJobExecHelper.runningJobs.length
-//      //logger.info(s"number is $number" )
-//      if (number == 0) {
-//        logger.info(s"push progress is $currentBegin")
-//        return currentBegin
-//      }
-
       HadoopJobExecHelper.runningJobs synchronized {
         HadoopJobExecHelper.runningJobs foreach {
           runningJob => val name = runningJob.getID.toString
@@ -304,35 +297,10 @@ class HiveEngineExecutor(outputPrintLimit:Int,
         case e:Exception => totalProgress = 0.0f
         case _ => totalProgress = 0.0f
       }
-
-      //HadoopJobExecHelper.runningJobs.foreach(runningJob => totalProgress += (runningJob.mapProgress() + runningJob.reduceProgress()))
       logger.info(s"hive progress is $totalProgress")
       if (totalProgress.isNaN) return 0.0f
       totalProgress + currentBegin
     }else 0.0f
-//    if (engineExecutorContext != null){
-//      val totalSQLs = engineExecutorContext.getTotalParagraph
-//      val currentSQL = engineExecutorContext.getCurrentParagraph
-//      val currentBegin = (currentSQL - 1) / totalSQLs.asInstanceOf[Float]
-//      val hiveProgressQueue =  HiveProgressHelper.getHiveProgress
-//      var hiveProgress:HiveProgress = null
-//      while(hiveProgressQueue.size() > 0){
-//        hiveProgress = hiveProgressQueue.take()
-//      }
-//      if (hiveProgress != null){
-//        this.map = hiveProgress.getMap
-//        this.reduce = hiveProgress.getReduce
-//      }
-//      //todo 先进行第一个
-//      val progress = (this.map + this.reduce) / totalTask
-//      //LOG.info(s"end to get the progress in hive map is $map and reduce is $reduce, progress is $progress")
-//      if (HiveProgressHelper.getSingleSQLProgress.equals(1.0f)) {
-//        HiveProgressHelper.storeSingleSQLProgress(0.0f)
-//        currentBegin + 1.0f / totalSQLs
-//      } else {
-//        currentBegin + (this.map + this.reduce) / totalTask / totalSQLs
-//      }
-//    }else 0.0f
   }
 
   override def getProgressInfo: Array[JobProgressInfo] = {
@@ -353,33 +321,15 @@ class HiveEngineExecutor(outputPrintLimit:Int,
     HadoopJobExecHelper.runningJobs synchronized {
       HadoopJobExecHelper.runningJobs foreach {
         runningJob => val succeedTask = ((runningJob.mapProgress() + runningJob.reduceProgress()) * 100).asInstanceOf[Int]
-          if (succeedTask.equals(totalTask.asInstanceOf[Int]) || runningJob.isComplete || runningJob.isSuccessful){
+        if (succeedTask.equals(totalTask.asInstanceOf[Int]) || runningJob.isComplete || runningJob.isSuccessful){
             arrayBuffer += JobProgressInfo(runningJob.getID.toString, totalTask.asInstanceOf[Int], 0, 0, totalTask.asInstanceOf[Int])
-          }else{
+        }else{
             arrayBuffer += JobProgressInfo(runningJob.getID.toString, totalTask.asInstanceOf[Int], 1, 0, succeedTask)
-          }
+        }
       }
     }
-
-//    val succeedTask = ((runningJob.mapProgress() + runningJob.reduceProgress()) * 100).asInstanceOf[Int]
-//    if (succeedTask.equals(totalTask.asInstanceOf[Int])){
-//      arrayBuffer += JobProgressInfo(runningJob.getJobName, totalTask.asInstanceOf[Int], 0, 0, succeedTask)
-//    }else{
-//      arrayBuffer += JobProgressInfo(runningJob.getJobName, totalTask.asInstanceOf[Int], 1, 0, succeedTask)
-//    }
-    arrayBuffer.toArray
-
-
-
-//    if (StringUtils.isNotEmpty(HiveProgressHelper.getAppid)){
-//      if (totalTask.asInstanceOf[Int] == reduce + map){
-//        arrayBuffer += JobProgressInfo(HiveProgressHelper.getAppid, totalTask.asInstanceOf[Int], 0, 0, map+reduce)
-//      } else{
-//        arrayBuffer += JobProgressInfo(HiveProgressHelper.getAppid, totalTask.asInstanceOf[Int], 1, 0, map+reduce)
-//      }
-//    }
-//    arrayBuffer.toArray
-  }
+     arrayBuffer.toArray
+   }
 
   override def log(): String = ""
 

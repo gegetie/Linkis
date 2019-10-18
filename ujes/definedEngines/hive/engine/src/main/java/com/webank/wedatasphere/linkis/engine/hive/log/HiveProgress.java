@@ -15,7 +15,7 @@
  */
 
 package com.webank.wedatasphere.linkis.engine.hive.log;
-
+ 
 /**
  * created by cooperyang on 2019/2/12
  * Description:

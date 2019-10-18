@@ -37,12 +37,6 @@
             <groupId>com.webank.wedatasphere.linkis</groupId>
             <artifactId>linkis-storage</artifactId>
             <version>${linkis.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.webank.wedatasphere.linkis</groupId>
-                    <artifactId>linkis-common</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>

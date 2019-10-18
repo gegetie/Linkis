@@ -387,17 +387,24 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/openFile")
     @Override
     public Response openFile(@Context HttpServletRequest req,
+    							@QueryParam("umUser") String umUser,
                              @QueryParam("path") String path,
                              @QueryParam("page") Integer page,
                              @QueryParam("pageSize") Integer pageSize,
                              @QueryParam("charset") String charset) throws IOException, WorkSpaceException {
+    		LOGGER.info("openFile:"+umUser+",path:"+path);
         String userName = SecurityFilter.getLoginUsername(req);
         Message message = Message.ok();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
         FsPath fsPath = new FsPath(path);
-        FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
+        FileSystem fileSystem = null;
+        if(!StringUtils.isEmpty(umUser)) {
+        		fileSystem = fsService.getFileSystem(umUser, fsPath);
+        }else {
+        		fileSystem = fsService.getFileSystem(userName, fsPath);
+        }
         fsValidate(fileSystem);
         if (StringUtils.isEmpty(page)) {
             page = 1;

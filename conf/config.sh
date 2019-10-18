@@ -75,7 +75,11 @@ PYTHON_INSTALL_IP=127.0.0.1
 PYTHON_EM_PORT=12001
 PYTHON_ENTRANCE_PORT=12002
 
-
+### Impala
+### This service is used to provide impala capability.
+IMPALA_INSTALL_IP=127.0.0.1
+IMPALA_EM_PORT=13001
+IMPALA_ENTRANCE_PORT=13002
 
 ########################################################################################
 

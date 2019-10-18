@@ -87,8 +87,9 @@ abstract class AbstractUserRestful extends UserRestful {
     "Maintain heartbeat success(维系心跳成功)！"
   }(t => Message.noLogin(t.getMessage))
 }
-abstract class UserPwdAbstractUserRestful extends AbstractUserRestful {
 
+
+abstract class UserPwdAbstractUserRestful extends AbstractUserRestful {
   override def login(gatewayContext: GatewayContext): Message = {
     val userNameArray = gatewayContext.getRequest.getQueryParams.get("userName")
     val passwordArray = gatewayContext.getRequest.getQueryParams.get("password")

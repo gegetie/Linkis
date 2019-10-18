@@ -34,19 +34,20 @@ import java.util.concurrent.TimeUnit;
 
 
 public class UJESClientImplTestJ{
+	//http://datanode-03:9001/api/rest_j/v1/gateway/heartbeat
     public static void main(String[] args){
-        DWSClientConfig clientConfig = ((DWSClientConfigBuilder) (DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-01:9001")
+        DWSClientConfig clientConfig = ((DWSClientConfigBuilder) (DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-03:9001")
                 .connectionTimeout(30000).discoveryEnabled(true)
                 .discoveryFrequency(1, TimeUnit.MINUTES)
                 .loadbalancerEnabled(true).maxConnectionSize(5)
                 .retryEnabled(false).readTimeout(30000)
-                .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("")
-                .setAuthTokenValue(""))).setDWSVersion("v1").build();
+                .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("zhuhui@kanzhun.com")
+                .setAuthTokenValue("Liangqilang1989"))).setDWSVersion("v1").build();
         UJESClient client = new UJESClientImpl(clientConfig);
 
         JobExecuteResult jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
                 .addExecuteCode("show tables")
-                .setEngineType(JobExecuteAction.EngineType$.MODULE$.HIVE()).setUser("").build());
+                .setEngineType(JobExecuteAction.EngineType$.MODULE$.HIVE()).setUser("zhuhui@kanzhun.com").setUmUser("athena").build());
         System.out.println("execId: " + jobExecuteResult.getExecID() + ", taskId: " + jobExecuteResult.taskID());
         JobStatusResult status = client.status(jobExecuteResult);
         while(!status.isCompleted()) {

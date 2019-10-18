@@ -28,22 +28,28 @@ import com.webank.wedatasphere.linkis.ujes.client.response.JobInfoResult
   * created by cooperyang on 2019/5/23.
   */
 class ResultSetListAction extends GetAction with UJESJobAction {
-  override def suffixURLs: Array[String] = Array("filesystem", "getDirFileTrees")
+  override def suffixURLs: Array[String] = Array("publicservice", "getDirFileTrees")
 }
 object ResultSetListAction {
   def builder(): Builder = new Builder
   class Builder private[ResultSetListAction]() {
     private var user: String = _
+    private var umUser: String = _
     private var path: String = _
 
     def set(jobInfoResult: JobInfoResult): Builder = {
-      this.user = jobInfoResult.getRequestPersistTask.getUmUser
+      this.user = jobInfoResult.getRequestPersistTask.getLoginUser
+      this.umUser = jobInfoResult.getRequestPersistTask.getUmUser
       this.path = jobInfoResult.getRequestPersistTask.getResultLocation
       this
     }
 
     def setUser(user: String): Builder = {
       this.user = user
+      this
+    }
+     def setUmUser(umUser: String): Builder = {
+      this.umUser = umUser
       this
     }
 
@@ -57,6 +63,7 @@ object ResultSetListAction {
       if(path == null) throw new UJESClientBuilderException("path is needed!")
       val resultSetListAction = new ResultSetListAction
       resultSetListAction.setParameter("path", path)
+      resultSetListAction.setParameter("umUser", umUser)
       resultSetListAction.setUser(user)
       resultSetListAction
     }

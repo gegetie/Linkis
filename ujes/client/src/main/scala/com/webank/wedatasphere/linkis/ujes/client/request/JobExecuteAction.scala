@@ -40,6 +40,7 @@ object JobExecuteAction {
   def builder(): Builder = new Builder
   class Builder private[JobExecuteAction]() {
     private var user: String = _
+    private var umUser: String = _
     private var executeCode: String = _
     private var formatCode: Boolean = false
     private var creator: String = _
@@ -51,6 +52,12 @@ object JobExecuteAction {
       this.user = user
       this
     }
+    
+     def setUmUser(umUser: String): Builder = {
+      this.umUser = umUser
+      this
+    }
+     
     def addExecuteCode(executeCode: String): Builder = {
       this.executeCode = executeCode
       this
@@ -110,6 +117,7 @@ object JobExecuteAction {
     def build(): JobExecuteAction = {
       val executeAction = new JobExecuteAction
       executeAction.setUser(user)
+      executeAction.addRequestPayload(TaskConstant.UMUSER, umUser)
       if(engineType == null) throw new UJESClientBuilderException("engineType is needed!")
       executeAction.addRequestPayload(TaskConstant.EXECUTEAPPLICATIONNAME, engineType.toString)
       executeAction.addRequestPayload(TaskConstant.RUNTYPE, if(runType == null) engineType.getDefaultRunType.toString else runType.toString)
@@ -152,6 +160,13 @@ object JobExecuteAction {
         override val toString: String = "hql"
       }
       override def getDefaultRunType: RunType = HQL
+    }
+     val IMPALA = new EngineType{
+      override val toString: String = "impala"
+      val SQL = new RunType {
+        override val toString: String = "sql"
+      }
+      override def getDefaultRunType: RunType = SQL
     }
     val SHELL = new EngineType{
       override val toString: String = "shell"

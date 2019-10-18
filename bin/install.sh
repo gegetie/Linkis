@@ -314,6 +314,20 @@ SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
 ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
 ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
 ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
+
+if [ "$HIVE_META_URL" != "" ]
+then
+  ssh $SERVER_IP "sed -i  \"s#hive.meta.url.*#hive.meta.url=$HIVE_META_URL#g\" $SERVER_CONF_PATH"
+fi
+if [ "$HIVE_META_USER" != "" ]
+then
+  ssh $SERVER_IP "sed -i  \"s#hive.meta.user.*#hive.meta.user=$HIVE_META_USER#g\" $SERVER_CONF_PATH"
+fi
+if [ "$HIVE_META_PASSWORD" != "" ]
+then
+  ssh $SERVER_IP "sed -i  \"s#hive.meta.password.*#hive.meta.password=$HIVE_META_PASSWORD#g\" $SERVER_CONF_PATH"
+fi
+
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##database end
@@ -393,3 +407,39 @@ ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.l
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##SparkEntrance install end
+
+
+
+##ImpalaEM install. impala  IMPALA
+PACKAGE_DIR=linkis/ujes/impala
+SERVERNAME=linkis-ujes-impala-enginemanager
+SERVER_IP=$IMPALA_INSTALL_IP
+SERVER_PORT=$IMPALA_EM_PORT
+SERVER_HOME=$LINKIS_INSTALL_HOME
+###install dir
+installPackage
+###update linkis.properties
+echo "$SERVERNAME-step4:update linkis conf"
+SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
+ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
+isSuccess "subsitution linkis.properties of $SERVERNAME"
+ssh -p $SSH_PORT $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/servlet-api-2.5.jar"
+echo "<----------------$SERVERNAME:end------------------->"
+##ImpalaEM install end
+
+##ImpalaEntrance install
+PACKAGE_DIR=linkis/ujes/impala
+SERVERNAME=linkis-ujes-impala-entrance
+SERVER_PORT=$IMPALA_ENTRANCE_PORT
+###install dir
+installPackage
+###update linkis.properties
+echo "$SERVERNAME-step4:update linkis conf"
+SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
+ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
+isSuccess "subsitution linkis.properties of $SERVERNAME"
+echo "<----------------$SERVERNAME:end------------------->"
+##ImpalaEntrance install end
+
+
