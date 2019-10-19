@@ -1,7 +1,7 @@
 package com.webank.wedatasphere.linkis.engine.impala.executor
 
 import java.io.PrintStream
-
+import scala.util.Random
 import com.webank.wedatasphere.linkis.engine.execute.{ EngineExecutor, EngineExecutorFactory }
 import com.webank.wedatasphere.linkis.engine.impala.common.ImpalaUtils
 import com.webank.wedatasphere.linkis.engine.impala.exception.ImpalaSessionStartFailedException
@@ -27,7 +27,7 @@ import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.callback.NameCallback
 import javax.security.auth.callback.PasswordCallback
 import javax.security.auth.callback.UnsupportedCallbackException
-
+import com.webank.wedatasphere.linkis.engine.configuration.ImpalaConfiguration
 import cn.techwolf.dap.impala.client.exception.SubmitException
 import cn.techwolf.dap.impala.client.exception.TransportException
 import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory
@@ -40,30 +40,28 @@ import cn.techwolf.dap.impala.client.ImpalaClient
 @Component
 class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
   private val logger = LoggerFactory.getLogger(getClass)
-
   private val BDP_QUEUE_NAME: String = "wds.linkis.yarnqueue"
 
   override def createExecutor(options: JMap[String, String]): EngineExecutor = {
-    val impalaConf: Map[String, String] = ImpalaUtils.getImpalaConf
     import scala.collection.JavaConversions._
     options.foreach { case (k, v) => logger.info(s"key is $k, value is $v") }
-   
-    
     val ugi = UserGroupInformation.getCurrentUser
     var impalaClient = ImpalaClientFactory.builder().withProtocol(Protocol.Thrift).withTransport(Transport.HiveServer2)
-      .withCoordinator("datanode-03", 21050)
-      .withSSL(true)
-      .withTrustStore("/opt/pems4cdh/ca.jks", "impala")
-      //.withCredential("root", "hive2")
-      .withLoginTicket(true)
-      .withParallelLimit(20)
-      .withHeartBeatsInSecond(1)
-      //.withSubmitQueue("root.test")
+      .withCoordinator(getCoordinator(ImpalaConfiguration.IMPALA_COORDINATOR_HOSTS.getValue.split("\\,")), ImpalaConfiguration.IMPALA_COORDINATOR_PORT.getValue)
+      .withSSL(ImpalaConfiguration.IMPALA_SSL.getValue)
+      .withTrustStore(ImpalaConfiguration.IMPALA_TRUST_FILEPATH.getValue, ImpalaConfiguration.IMPALA_TRUST_PASSWORD.getValue)
+      .withLoginTicket(ImpalaConfiguration.IMPALA_LOGINTICKET.getValue.asInstanceOf[Boolean])
+      .withParallelLimit(ImpalaConfiguration.IMPALA_PARALLELLIMIT.getValue)
+      .withHeartBeatsInSecond(3)
+      .withSubmitQueue(options.getOrDefault(BDP_QUEUE_NAME, ImpalaConfiguration.IMPALA_JOB_DEFALUT_QUEUE.getValue))
       .build();
-    
-    logger.info("createExecutor ok getExecutionCount："+ impalaClient.getExecutionCount)
-    var impalaEngineExecutor =  new ImpalaEngineExecutor(5000, impalaClient, ugi)
-    return impalaEngineExecutor
+
+      logger.info("createExecutor ok getExecutionCount：" + impalaClient.getExecutionCount)
+     new ImpalaEngineExecutor(5000, impalaClient, ugi)
   }
 
+  /**
+   * 随机去取一个地址；
+   */
+  def getCoordinator(ipList: Array[String]): String = Random.shuffle(ipList.toList).head
 }
