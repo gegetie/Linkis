@@ -27,7 +27,7 @@ import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.callback.NameCallback
 import javax.security.auth.callback.PasswordCallback
 import javax.security.auth.callback.UnsupportedCallbackException
-import com.webank.wedatasphere.linkis.engine.configuration.ImpalaConfiguration
+import com.webank.wedatasphere.linkis.engine.impala.configuration.ImpalaConfiguration
 import cn.techwolf.dap.impala.client.exception.SubmitException
 import cn.techwolf.dap.impala.client.exception.TransportException
 import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory

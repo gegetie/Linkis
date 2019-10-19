@@ -18,10 +18,11 @@
 
 
 # Stop all linkis applications
-# 启动linkis所有的后台微服务应用
 info="We will stop all linkis applications, it will take some time, please wait"
 echo ${info}
 
+#Actively load user env
+source ~/.bash_profile
 
 workDir=`dirname "${BASH_SOURCE-$0}"`
 workDir=`cd "$workDir"; pwd`
@@ -38,10 +39,10 @@ else
     echo "INFO:" + $1
 fi
 }
-#安装dos2unix
+
 sudo yum install dos2unix > /dev/null 2>&1
 
-#获取本机IP
+
 local_host="`hostname --fqdn`"
 
 #if there is no LINKIS_INSTALL_HOME，we need to source config again
@@ -58,7 +59,7 @@ APP_PREFIX="linkis-"
 
 
 
-#顺序启动linkis的各个微服务,如果用户没有指定微服务的部署ip，则在本地启动
+
 #eureka
 echo "<-------------------------------->"
 echo "Begin to stop Eureka Server"
@@ -105,18 +106,18 @@ isSuccess "End to stop Public Service"
 echo "<-------------------------------->"
 sleep 3
 
-#database
+#metadata
 echo "<-------------------------------->"
-echo "Begin to stop Database"
-DATABASE_NAME="database"
-DATABASE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${DATABASE_NAME}/bin
-DATABASE_STOP_CMD="if [ -d ${DATABASE_BIN} ];then cd ${DATABASE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh stop-database.sh > /dev/null;else echo 'WARNING:Database did not start';fi"
-if [ -n "${DATABASE_INSTALL_IP}" ];then
-    ssh ${DATABASE_INSTALL_IP} "${DATABASE_STOP_CMD}"
+echo "Begin to stop Metadata."
+METADATA_NAME="metadata"
+METADATA_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${METADATA_NAME}/bin
+METADATA_STOP_CMD="if [ -d ${METADATA_BIN} ];then cd ${METADATA_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh stop-metadata.sh > /dev/null;else echo 'WARNING:Metadata did not start';fi"
+if [ -n "${METADATA_INSTALL_IP}" ];then
+    ssh ${METADATA_INSTALL_IP} "${METADATA_STOP_CMD}"
 else
-    ssh ${local_host} "${DATABASE_STOP_CMD}"
+    ssh ${local_host} "${METADATA_STOP_CMD}"
 fi
-isSuccess  "End to stop Database"
+isSuccess  "End to stop Metadata."
 echo "<-------------------------------->"
 sleep 3
 
@@ -218,6 +219,23 @@ fi
 echo "End to stop Python Engine Manager"
 echo "<-------------------------------->"
 
+
+
+#JDBCEntrance
+echo "<-------------------------------->"
+echo "Begin to stop JDBC Entrance"
+JDBC_ENTRANCE_NAME="ujes-jdbc-entrance"
+JDBC_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${JDBC_ENTRANCE_NAME}/bin
+JDBC_ENTRANCE_STOP_CMD="if [ -d ${JDBC_ENTRANCE_BIN} ];then cd ${JDBC_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh stop-jdbcentrance.sh > /dev/null;else echo 'WARNING:JDBC Entrance will not start';fi"
+if [ -n "${JDBC_INSTALL_IP}" ];then
+    ssh ${JDBC_INSTALL_IP} "${JDBC_ENTRANCE_STOP_CMD}"
+else
+    ssh ${local_host} "${JDBC_ENTRANCE_STOP_CMD}"
+fi
+echo "End to stop JDBC Entrance"
+echo "<-------------------------------->"
+
+sleep 3
 
 
 ##PipelineEntrance

@@ -22,16 +22,48 @@
 
     <groupId>com.webank.wedatasphere.linkis</groupId>
     <artifactId>linkis</artifactId>
-    <version>0.8.0</version>
+    <version>0.9.0</version>
     <packaging>pom</packaging>
 
+    <name>Linkis Project Parent POM</name>
+    <description>Linkis helps easily connect to various back-end computation/storage engines</description>
+    <url>https://github.com/WeBankFinTech/Linkis/wiki</url>
+
+    <licenses>
+        <license>
+            <name>Apache 2.0 License</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:WeBankFinTech/Linkis.git</connection>
+        <developerConnection>scm:git:https://github.com/WeBankFinTech/Linkis.git</developerConnection>
+        <url>scm:git:git@github.com:WeBankFinTech/Linkis.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>peace</id>
+            <name>peace wong</name>
+            <email>wpeace1212@gmail.com</email>
+            <url>http://blog.wpeace.cn/</url>
+            <organization>WeBankFinTech</organization>
+            <organizationUrl>https://github.com/WeBankFinTech</organizationUrl>
+        </developer>
+    </developers>
+
     <modules>
-        <module>core/cloudProtocol</module>
+
         <module>core/common</module>
+        <module>core/cloudProtocol</module>
         <module>core/scheduler</module>
         <module>core/cloudModule</module>
         <module>core/cloudRPC</module>
         <module>core/cloudMybatis</module>
+        <module>core/httpclient</module>
         <module>storage/storage</module>
         <module>resourceManager/resourcemanagercommon</module>
         <module>resourceManager/resourcemanagerclient</module>
@@ -60,17 +92,18 @@
 
         <module>ujes/definedEngines/pipeline/engine</module>
         <module>ujes/definedEngines/pipeline/enginemanager</module>
-        <module>ujes/definedEngines/pipeline/entrance</module>
-        
+        <module>ujes/definedEngines/pipeline/entrance</module>        
         <module>ujes/definedEngines/impala/engine</module>
         <module>ujes/definedEngines/impala/enginemanager</module>
         <module>ujes/definedEngines/impala/entrance</module>
-        
+        <module>ujes/definedEngines/jdbc/entrance</module>
         <module>gateway/core</module>
         <module>gateway/springcloudgateway</module>
         <module>gateway/gateway-ujes-support</module>
+        <module>gateway/gateway-httpclient-support</module>
         <module>eurekaServer</module>
         <module>publicService</module>
+        <module>ujes/client</module>
         <module>assembly</module>
     </modules>
 
@@ -89,8 +122,9 @@
         <jersey.servlet.version>2.23.1</jersey.servlet.version>
         <jetty.version>9.4.11.v20180605</jetty.version>
         <slf4j.version>1.7.12</slf4j.version>
-        <linkis.version>0.8.0</linkis.version>
+        <linkis.version>0.9.0</linkis.version>
         <maven.version>3.3.3</maven.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>
@@ -190,7 +224,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <project.release.version>0.8.0</project.release.version>
+                <project.release.version>0.9.0</project.release.version>
                 <netty.version>4.1.17.Final</netty.version>
                 <json4s.version>3.5.3</json4s.version>
             </properties>
@@ -198,12 +232,85 @@
         <profile>
             <id>spark2.1</id>
             <properties>
-                <project.release.version>0.8.0</project.release.version>
+                <project.release.version>0.9.0</project.release.version>
                 <netty.version>4.0.47.Final</netty.version>
                 <json4s.version>3.2.11</json4s.version>
             </properties>
         </profile>
+
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <configuration>
+                        <attach>true</attach>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>create-source-jar</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                                <goal>test-jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+               </plugins>
+            </build>
+        </profile>
+
     </profiles>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <pluginManagement>
             <plugins>

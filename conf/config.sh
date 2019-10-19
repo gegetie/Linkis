@@ -9,9 +9,9 @@ LINKIS_INSTALL_HOME=/appcom/Install/Linkis        #Must provided
 
 ### Specifies the user workspace, which is used to store the user's script files and log files.
 ### Generally local directory
-WORKSPACE_USER_ROOT_PATH=file:///tmp/linkis/
+WORKSPACE_USER_ROOT_PATH=file:///tmp/linkis/ ##file:// required
 ### User's root hdfs path
-HDFS_USER_ROOT_PATH=hdfs:///tmp/linkis
+HDFS_USER_ROOT_PATH=hdfs:///tmp/linkis ##hdfs:// required
 
 ### Path to store job ResultSet：file or hdfs path
 RESULT_SET_ROOT_PATH=hdfs:///tmp/linkis
@@ -46,8 +46,8 @@ PUBLICSERVICE_PORT=9002
 
 
 ### Hive Metadata Query service, provide the metadata information of Hive databases.
-DATABASE_INSTALL_IP=127.0.0.1
-DATABASE_PORT=9008
+METADATA_INSTALL_IP=127.0.0.1
+METADATA_PORT=9008
 
 
 ### ResourceManager
@@ -75,11 +75,13 @@ PYTHON_INSTALL_IP=127.0.0.1
 PYTHON_EM_PORT=12001
 PYTHON_ENTRANCE_PORT=12002
 
-### Impala
-### This service is used to provide impala capability.
-IMPALA_INSTALL_IP=127.0.0.1
-IMPALA_EM_PORT=13001
-IMPALA_ENTRANCE_PORT=13002
+
+### JDBC
+### This service is used to provide jdbc capability.
+JDBC_INSTALL_IP=127.0.0.1
+JDBC_ENTRANCE_PORT=9888
+
+
 
 ########################################################################################
 
@@ -88,4 +90,4 @@ IMPALA_ENTRANCE_PORT=13002
 #LDAP_BASEDN=dc=webank,dc=com
 
 
-LINKIS_VERSION=0.8.0
+LINKIS_VERSION=0.9.0

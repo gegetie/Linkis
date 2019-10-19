@@ -1,8 +1,11 @@
 #!/bin/sh
 
+#Actively load user env
+source ~/.bash_profile
+
 shellDir=`dirname $0`
 workDir=`cd ${shellDir}/..;pwd`
-SSH_PORT=13122
+
 
 
 #To be compatible with MacOS and Linux
@@ -39,27 +42,44 @@ fi
 }
 
 function checkPythonAndJava(){
-  python --version
-  isSuccess "execute python --version"
-  java -version
-  isSuccess "execute java --version"
+	python --version
+	isSuccess "execute python --version"
+	java -version
+	isSuccess "execute java --version"
 }
 
 function checkHadoopAndHive(){
-  hdfs version
-  isSuccess "execute hdfs version"
-  hive --help
-  isSuccess "execute hive -h"
+	hdfs version
+	isSuccess "execute hdfs version"
+	hive --help
+	#isSuccess "execute hive -h"
 }
 
 function checkSpark(){
-  spark-submit --version
-  isSuccess "execute spark-submit --version"
+	spark-submit --version
+	isSuccess "execute spark-submit --version"
 }
 
-##install env:expect,
-sudo yum install -y expect
-isSuccess "install expect"
+say() {
+    printf 'check command fail \n %s\n' "$1"
+}
+
+err() {
+    say "$1" >&2
+    exit 1
+}
+
+check_cmd() {
+    command -v "$1" > /dev/null 2>&1
+}
+
+need_cmd() {
+    if ! check_cmd "$1"; then
+        err "need '$1' (command not found)"
+    fi
+}
+
+need_cmd expect
 
 ##load config
 echo "step1:load config "
@@ -67,13 +87,14 @@ source ${workDir}/conf/config.sh
 source ${workDir}/conf/db.sh
 isSuccess "load config"
 
+
 local_host="`hostname --fqdn`"
 
 ##env check
 echo "Please enter the mode selection such as: 1"
-echo " 1: Lite(精简版)"
-echo " 2: Simple(简单版)"
-echo " 3: Standard(标准版)"
+echo " 1: Lite"
+echo " 2: Simple"
+echo " 3: Standard"
 echo ""
 
 INSTALL_MODE=1
@@ -101,24 +122,42 @@ fi
 
 
 ##env check
-echo "Do you empty Linkis table information in the database?"
-echo " 1: Rebuild the table(重新建表)"
-echo " 2: Do not execute table-building statements(不执行建表语句)"
+echo "Do you want to clear Linkis table information in the database?"
+echo " 1: Do not execute table-building statements"
+echo " 2: Dangerous! Clear all data and rebuild the tables"
 echo ""
 
 MYSQL_INSTALL_MODE=1
 
 read -p "Please input the choice:"  idx
-if [[ '1' = "$idx" ]];then
-  MYSQL_INSTALL_MODE=1
-  echo "You chose Rebuild the table"
-elif [[ '2' = "$idx" ]];then
+if [[ '2' = "$idx" ]];then
   MYSQL_INSTALL_MODE=2
+  echo "You chose Rebuild the table"
+elif [[ '1' = "$idx" ]];then
+  MYSQL_INSTALL_MODE=1
   echo "You chose not execute table-building statements"
 else
   echo "no choice,exit!"
   exit 1
 fi
+
+
+echo "create hdfs  directory and local directory"
+if [ "$WORKSPACE_USER_ROOT_PATH" != "" ]
+then
+  localRootDir=$WORKSPACE_USER_ROOT_PATH
+  if [[ $WORKSPACE_USER_ROOT_PATH == file://* ]]
+  then
+    localRootDir=${WORKSPACE_USER_ROOT_PATH#file://}
+  fi
+  mkdir $localRootDir/$deployUser
+fi
+isSuccess "create  local directory"
+if [ "$HDFS_USER_ROOT_PATH" != "" ]
+then
+  hdfs dfs -mkdir $HDFS_USER_ROOT_PATH/$deployUser
+fi
+isSuccess "create  hdfs directory"
 
 ##stop server
 #echo "step2,stop server"
@@ -135,21 +174,21 @@ then
   SERVER_IP=$local_host
 fi
 EUREKA_URL=http://$SERVER_IP:$EUREKA_PORT/eureka/
-if ! ssh -p $SSH_PORT $SERVER_IP test -e $SERVER_HOME; then
-  ssh -p $SSH_PORT $SERVER_IP "sudo mkdir -p $SERVER_HOME;sudo chown -R $deployUser:$deployUser $SERVER_HOME"
+if ! ssh $SERVER_IP test -e $SERVER_HOME; then
+  ssh $SERVER_IP "sudo mkdir -p $SERVER_HOME;sudo chown -R $deployUser:$deployUser $SERVER_HOME"
   isSuccess "create the dir of $SERVER_HOME"
 fi
 
 echo "$SERVERNAME-step2:copy install package"
-scp -P $SSH_PORT ${workDir}/share/springcloud/$SERVERNAME/$SERVERNAME.zip $SERVER_IP:$SERVER_HOME
+scp ${workDir}/share/springcloud/$SERVERNAME/$SERVERNAME.zip $SERVER_IP:$SERVER_HOME
 isSuccess "copy $SERVERNAME"
-ssh -p $SSH_PORT $SERVER_IP "cd $SERVER_HOME/;rm -rf eureka;unzip  $SERVERNAME.zip > /dev/null"
+ssh $SERVER_IP "cd $SERVER_HOME/;rm -rf eureka;unzip  $SERVERNAME.zip > /dev/null"
 
 echo "$SERVERNAME-step3:subsitution conf"
 eureka_conf_path=$SERVER_HOME/$SERVERNAME/conf/application-$SERVERNAME.yml
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#port:.*#port: $SERVER_PORT#g\" $eureka_conf_path"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#defaultZone:.*#defaultZone: $EUREKA_URL#g\" $eureka_conf_path"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#hostname:.*#hostname: $SERVER_IP#g\" $eureka_conf_path"
+ssh $SERVER_IP "sed -i ${txt}  \"s#port:.*#port: $SERVER_PORT#g\" $eureka_conf_path"
+ssh $SERVER_IP "sed -i ${txt}  \"s#defaultZone:.*#defaultZone: $EUREKA_URL#g\" $eureka_conf_path"
+ssh $SERVER_IP "sed -i ${txt}  \"s#hostname:.*#hostname: $SERVER_IP#g\" $eureka_conf_path"
 isSuccess "subsitution conf of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##Eurkea install  end
@@ -164,30 +203,30 @@ then
   SERVER_IP=$local_host
 fi
 
-if ! ssh -p $SSH_PORT $SERVER_IP test -e $SERVER_HOME; then
-  ssh -p $SSH_PORT $SERVER_IP "sudo mkdir -p $SERVER_HOME;sudo chown -R $deployUser:$deployUser $SERVER_HOME"
+if ! ssh $SERVER_IP test -e $SERVER_HOME; then
+  ssh $SERVER_IP "sudo mkdir -p $SERVER_HOME;sudo chown -R $deployUser:$deployUser $SERVER_HOME"
   isSuccess "create the dir of  $SERVERNAME"
 fi
 
 echo "$SERVERNAME-step2:copy install package"
-scp -P $SSH_PORT ${workDir}/share/$PACKAGE_DIR/$SERVERNAME.zip $SERVER_IP:$SERVER_HOME
+scp ${workDir}/share/$PACKAGE_DIR/$SERVERNAME.zip $SERVER_IP:$SERVER_HOME
 isSuccess "copy  ${SERVERNAME}.zip"
-ssh -p $SSH_PORT $SERVER_IP "cd $SERVER_HOME/;rm -rf $SERVERNAME-bak; mv -f $SERVERNAME $SERVERNAME-bak"
-ssh -p $SSH_PORT $SERVER_IP "cd $SERVER_HOME/;unzip $SERVERNAME.zip > /dev/null"
+ssh $SERVER_IP "cd $SERVER_HOME/;rm -rf $SERVERNAME-bak; mv -f $SERVERNAME $SERVERNAME-bak"
+ssh $SERVER_IP "cd $SERVER_HOME/;unzip $SERVERNAME.zip > /dev/null"
 isSuccess "unzip  ${SERVERNAME}.zip"
 if [ "$SERVERNAME" != "linkis-gateway" ]
 then
-    scp -P $SSH_PORT ${workDir}/share/linkis/module/module.zip $SERVER_IP:$SERVER_HOME
+    scp ${workDir}/share/linkis/module/module.zip $SERVER_IP:$SERVER_HOME
     isSuccess "cp module.zip"
-    ssh -p $SSH_PORT $SERVER_IP "cd $SERVER_HOME/;rm -rf modulebak;mv -f module modulebak;"
-    ssh -p $SSH_PORT $SERVER_IP "cd $SERVER_HOME/;unzip  module.zip > /dev/null;cp module/lib/* $SERVER_HOME/$SERVERNAME/lib/"
+    ssh $SERVER_IP "cd $SERVER_HOME/;rm -rf modulebak;mv -f module modulebak;"
+    ssh $SERVER_IP "cd $SERVER_HOME/;unzip  module.zip > /dev/null;cp module/lib/* $SERVER_HOME/$SERVERNAME/lib/"
     isSuccess "unzip module.zip"
 fi
 echo "$SERVERNAME-step3:subsitution conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/application.yml
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#port:.*#port: $SERVER_PORT#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#defaultZone:.*#defaultZone: $EUREKA_URL#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#hostname:.*#hostname: $SERVER_IP#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#port:.*#port: $SERVER_PORT#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#defaultZone:.*#defaultZone: $EUREKA_URL#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#hostname:.*#hostname: $SERVER_IP#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution conf of $SERVERNAME"
 }
 ##function end
@@ -203,9 +242,9 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.ldap.proxy.url.*#wds.linkis.ldap.proxy.url=$LDAP_URL#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.ldap.proxy.baseDN.*#wds.linkis.ldap.proxy.baseDN=$LDAP_BASEDN#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.gateway.admin.user.*#wds.linkis.gateway.admin.user=$deployUser#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.ldap.proxy.url.*#wds.linkis.ldap.proxy.url=$LDAP_URL#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.ldap.proxy.baseDN.*#wds.linkis.ldap.proxy.baseDN=$LDAP_BASEDN#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.gateway.admin.user.*#wds.linkis.gateway.admin.user=$deployUser#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##GateWay Install end
@@ -221,11 +260,11 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.workspace.filesystem.localuserrootpath.*#wds.linkis.workspace.filesystem.localuserrootpath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.workspace.filesystem.hdfsuserrootpath.prefix.*#wds.linkis.workspace.filesystem.hdfsuserrootpath.prefix=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.workspace.filesystem.localuserrootpath.*#wds.linkis.workspace.filesystem.localuserrootpath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.workspace.filesystem.hdfsuserrootpath.prefix.*#wds.linkis.workspace.filesystem.hdfsuserrootpath.prefix=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##publicservice end
@@ -245,21 +284,21 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/json4s-*3.5.3.jar"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/json4s-*3.5.3.jar"
 echo "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##ResourceManager install end
 
 ##init db
-if [[ '1' = "$MYSQL_INSTALL_MODE" ]];then
-  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
-  isSuccess "source linkis_ddl.sql"
-  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
-  isSuccess "source linkis_dml.sql"
-  echo "Rebuild the table"
+if [[ '2' = "$MYSQL_INSTALL_MODE" ]];then
+	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
+	isSuccess "source linkis_ddl.sql"
+	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
+	isSuccess "source linkis_dml.sql"
+	echo "Rebuild the table"
 fi
 
 
@@ -275,7 +314,7 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 
@@ -289,48 +328,46 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##PythonEntrance install end
 
 if [[ '1' = "$INSTALL_MODE" ]];then
-  echo "Lite install end"
-  exit 0
+	echo "Lite install end"
+	exit 0
 fi
 
 ##linkis-metadata install
 PACKAGE_DIR=linkis/linkis-metadata
 SERVERNAME=linkis-metadata
-SERVER_IP=$DATABASE_INSTALL_IP
-SERVER_PORT=$DATABASE_PORT
+SERVER_IP=$METADATA_INSTALL_IP
+SERVER_PORT=$METADATA_PORT
 SERVER_HOME=$LINKIS_INSTALL_HOME
 ###install dir
 installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
-
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.url.*#wds.linkis.server.mybatis.datasource.url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?characterEncoding=UTF-8#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.username.*#wds.linkis.server.mybatis.datasource.username=$MYSQL_USER#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.server.mybatis.datasource.password.*#wds.linkis.server.mybatis.datasource.password=$MYSQL_PASSWORD#g\" $SERVER_CONF_PATH"
 if [ "$HIVE_META_URL" != "" ]
 then
-  ssh $SERVER_IP "sed -i  \"s#hive.meta.url.*#hive.meta.url=$HIVE_META_URL#g\" $SERVER_CONF_PATH"
+  ssh $SERVER_IP "sed -i ${txt}  \"s#hive.meta.url.*#hive.meta.url=$HIVE_META_URL#g\" $SERVER_CONF_PATH"
 fi
 if [ "$HIVE_META_USER" != "" ]
 then
-  ssh $SERVER_IP "sed -i  \"s#hive.meta.user.*#hive.meta.user=$HIVE_META_USER#g\" $SERVER_CONF_PATH"
+  ssh $SERVER_IP "sed -i ${txt}  \"s#hive.meta.user.*#hive.meta.user=$HIVE_META_USER#g\" $SERVER_CONF_PATH"
 fi
 if [ "$HIVE_META_PASSWORD" != "" ]
 then
-  ssh $SERVER_IP "sed -i  \"s#hive.meta.password.*#hive.meta.password=$HIVE_META_PASSWORD#g\" $SERVER_CONF_PATH"
+  ssh $SERVER_IP "sed -i ${txt}  \"s#hive.meta.password.*#hive.meta.password=$HIVE_META_PASSWORD#g\" $SERVER_CONF_PATH"
 fi
-
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
-##database end
+##metadata end
 
 ##HiveEM install
 PACKAGE_DIR=linkis/ujes/hive
@@ -343,9 +380,9 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
-ssh -p $SSH_PORT $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/servlet-api-2.5.jar"
+ssh $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/servlet-api-2.5.jar"
 echo "<----------------$SERVERNAME:end------------------->"
 ##HiveEM install end
 
@@ -358,20 +395,20 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##HiveEntrance install end
 
 
 if [[ '2' = "$INSTALL_MODE" ]];then
-  echo "Simple install end"
-  exit 0
+	echo "Simple install end"
+	exit 0
 fi
 
 if [[ '3' != "$INSTALL_MODE" ]];then
-  exit 0
+	exit 0
 fi
 
 ##SparkEM install
@@ -386,9 +423,9 @@ installPackage
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
 ENGINE_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis-engine.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.core.jar.*#wds.linkis.enginemanager.core.jar=$SERVER_HOME/$SERVERNAME/lib/linkis-ujes-spark-engine-$LINKIS_VERSION.jar#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.spark.driver.conf.mainjar.*#wds.linkis.spark.driver.conf.mainjar=$SERVER_HOME/$SERVERNAME/conf:$SERVER_HOME/$SERVERNAME/lib/*#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.enginemanager.core.jar.*#wds.linkis.enginemanager.core.jar=$SERVER_HOME/$SERVERNAME/lib/linkis-ujes-spark-engine-$LINKIS_VERSION.jar#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.spark.driver.conf.mainjar.*#wds.linkis.spark.driver.conf.mainjar=$SERVER_HOME/$SERVERNAME/conf:$SERVER_HOME/$SERVERNAME/lib/*#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##SparkEM install end
@@ -402,44 +439,24 @@ installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##SparkEntrance install end
 
 
-
-##ImpalaEM install. impala  IMPALA
-PACKAGE_DIR=linkis/ujes/impala
-SERVERNAME=linkis-ujes-impala-enginemanager
-SERVER_IP=$IMPALA_INSTALL_IP
-SERVER_PORT=$IMPALA_EM_PORT
-SERVER_HOME=$LINKIS_INSTALL_HOME
+##JDBCEntrance install
+PACKAGE_DIR=linkis/ujes/jdbc
+SERVERNAME=linkis-ujes-jdbc-entrance
+SERVER_PORT=$JDBC_ENTRANCE_PORT
 ###install dir
 installPackage
 ###update linkis.properties
 echo "$SERVERNAME-step4:update linkis conf"
 SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
-isSuccess "subsitution linkis.properties of $SERVERNAME"
-ssh -p $SSH_PORT $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/servlet-api-2.5.jar"
-echo "<----------------$SERVERNAME:end------------------->"
-##ImpalaEM install end
-
-##ImpalaEntrance install
-PACKAGE_DIR=linkis/ujes/impala
-SERVERNAME=linkis-ujes-impala-entrance
-SERVER_PORT=$IMPALA_ENTRANCE_PORT
-###install dir
-installPackage
-###update linkis.properties
-echo "$SERVERNAME-step4:update linkis conf"
-SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
-ssh -p $SSH_PORT $SERVER_IP "sed -i  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$RESULT_SET_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
-##ImpalaEntrance install end
-
-
+##SparkEntrance install end
