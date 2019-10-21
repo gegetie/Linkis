@@ -149,13 +149,12 @@ class HiveEngineExecutor(outputPrintLimit:Int,
                 //sem.validate()
                // val queryPlan = new QueryPlan(realCode, sem, 0L, null, org.apache.hadoop.hive.ql.plan.HiveOperation.QUERY,driver.getSchema)
                // val numberOfJobs = Utilities.getMRTasks(queryPlan.getRootTasks).size
-                var numberOfJobs = 1
+                numberOfMRJobs = 1
                 //queryPlan.getRootTasks foreach {task =>
                 //  LOG.info(s"MR job jobID ${task.getJobID} and job is ${task.getMapWork.size()}")
                 //}
-                
-                LOG.info(s"$realCode has $numberOfJobs MR jobs to do")
-                if (numberOfJobs != 0) engineExecutorContext.appendStdout(s"Your hive sql has $numberOfJobs MR jobs to do")
+                //LOG.info(s"$realCode has $numberOfJobs MR jobs to do")
+                //if (numberOfJobs != 0) engineExecutorContext.appendStdout(s"Your hive sql has $numberOfJobs MR jobs to do")
                 val hiveResponse:CommandProcessorResponse = driver.run(realCode)
                 if (hiveResponse.getResponseCode != 0) {
                   LOG.error("Hive query failed, reason: ", hiveResponse.getException)

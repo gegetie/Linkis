@@ -46,7 +46,7 @@ object UJESClientHiveTestScala extends App {
   val client = UJESClient(clientConfig)
 
   val jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
-    .addExecuteCode("select * from dm_boss_dap_woody.base_person limit 10;")
+    .addExecuteCode("select count(1) from dm_boss_dap_woody.base_person limit 10;")
     .setEngineType(EngineType.HIVE).setUser("zhuhui@kanzhun.com").setUmUser("athena").build())
   println("execId: " + jobExecuteResult.getExecID + ", taskId: " + jobExecuteResult.taskID)
  
