@@ -54,6 +54,7 @@ public class WorkspaceUtil {
                 || path.endsWith(".python")
                 || path.endsWith(".log")
                 || path.endsWith(".r")
+                || path.endsWith(".impalasql")
                 || path.endsWith(".out")
                 || path.endsWith(".scala")
                 || path.endsWith(".py")) {
