@@ -1,3 +1,11 @@
+.*
+!.gitignore
+target
+*/.gitignore
+*.iml
+logs
+data
+
 *.iml
 .idea
 .DS_Store
