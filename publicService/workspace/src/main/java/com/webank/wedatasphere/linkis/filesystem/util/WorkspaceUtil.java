@@ -16,7 +16,6 @@
 
 package com.webank.wedatasphere.linkis.filesystem.util;
 
-import com.webank.wedatasphere.linkis.common.utils.Utils;
 import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class WorkspaceUtil {
                 || path.endsWith(".python")
                 || path.endsWith(".log")
                 || path.endsWith(".r")
-                || path.endsWith(".impalasql")
+                || path.endsWith(".implql")
                 || path.endsWith(".out")
                 || path.endsWith(".scala")
                 || path.endsWith(".py")) {

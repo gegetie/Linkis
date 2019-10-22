@@ -37,10 +37,16 @@ import com.webank.wedatasphere.linkis.ujes.client.UJESClient
 object Test extends App {
   
  
-  val aa:Long =88
+  val yarnQueue:String ="root.webank.aaa"
   
-  val bb:Long =122
   
    
-  println("jobInfo: " +aa.asInstanceOf[Float]/222)
- }
+    var queueArray = yarnQueue.split("\\.").toBuffer
+     if(queueArray.length>=3){
+        queueArray = queueArray.take(3)
+        System.out.println(queueArray(0)+"."+queueArray(1)+"_"+queueArray(2))
+    } else {
+      System.out.println(yarnQueue)
+    }
+   
+}
