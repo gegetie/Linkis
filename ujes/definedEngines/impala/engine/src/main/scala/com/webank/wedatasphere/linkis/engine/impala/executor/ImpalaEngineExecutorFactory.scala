@@ -50,7 +50,8 @@ class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
     import scala.collection.JavaConversions._
     options.foreach { case (k, v) => logger.info(s"key is $k, value is $v") }
     val ugi = UserGroupInformation.getCurrentUser
-    var queueName =  options.getOrDefault(BDP_QUEUE_NAME, ImpalaConfiguration.IMPALA_JOB_DEFALUT_QUEUE.getValue)
+    var queueName =  getImpalaQueue(options.getOrDefault(BDP_QUEUE_NAME, ImpalaConfiguration.IMPALA_JOB_DEFALUT_QUEUE.getValue))
+    logger.info("QueueName  is "+ queueName)
     var impalaClient = ImpalaClientFactory.builder().withProtocol(Protocol.Thrift).withTransport(Transport.HiveServer2)
       .withCoordinator(getCoordinator(ImpalaConfiguration.IMPALA_COORDINATOR_HOSTS.getValue.split("\\,")), ImpalaConfiguration.IMPALA_COORDINATOR_PORT.getValue)
       .withSSL(ImpalaConfiguration.IMPALA_SSL.getValue)
@@ -76,9 +77,9 @@ class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
    */
   def getImpalaQueue(yarnQueue: String): String = {
     var queueArray = yarnQueue.split("\\.").toBuffer
-    if(queueArray.length>=3){
-      queueArray = queueArray.take(3)
-      return queueArray(0)+"."+queueArray(1)+"_"+queueArray(2)
+    if(queueArray.length>=2){
+      queueArray = queueArray.take(2)
+      return "root"+"."+queueArray(0)+"_"+queueArray(1)
     }
     yarnQueue
   }

@@ -54,6 +54,7 @@ public class WorkspaceUtil {
                 || path.endsWith(".log")
                 || path.endsWith(".r")
                 || path.endsWith(".implql")
+                || path.endsWith(".iql")
                 || path.endsWith(".out")
                 || path.endsWith(".scala")
                 || path.endsWith(".py")) {
