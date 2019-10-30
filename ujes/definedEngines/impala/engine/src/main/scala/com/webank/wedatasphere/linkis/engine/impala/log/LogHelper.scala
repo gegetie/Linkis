@@ -33,6 +33,7 @@ object LogHelper {
   private val appidPattern = """The url to track the job: http://(.*)/proxy/(.*)/""".r.unanchored
   private val successPattern = """change state Running => Succeed""".r.unanchored
   private val failedPattern = """change state Running => Failed""".r.unanchored
+ 
   def checkPattern(log:String):java.util.List[ImpalaProgress] = {
     //logger.info("checkPattern is starting")
     val impalaProgresses = new util.ArrayList[ImpalaProgress]()

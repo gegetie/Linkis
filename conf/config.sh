@@ -1,3 +1,5 @@
+SSH_PORT=13122
+
 ### deploy user
 deployUser=hadoop
 

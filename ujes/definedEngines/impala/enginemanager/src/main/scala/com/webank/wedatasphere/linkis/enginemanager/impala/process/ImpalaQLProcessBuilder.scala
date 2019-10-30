@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * created by cooperyang on 2018/11/21
+  * created by zhuhui on 2019/10/10
   * Description:
   */
 class ImpalaQLProcessBuilder extends JavaProcessEngineBuilder{

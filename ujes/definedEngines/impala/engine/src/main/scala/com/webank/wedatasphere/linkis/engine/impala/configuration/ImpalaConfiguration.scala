@@ -16,7 +16,7 @@ object ImpalaConfiguration {
     val IMPALA_LOGINTICKET = CommonVars("wds.linkis.engine.impala.loginTicket", true)
     val IMPALA_PARALLELLIMIT = CommonVars("wds.linkis.engine.impala.parallelLimit", 10)
     
-    val IMPALA_JOB_QUEUE_ = CommonVars("wds.linkis.engine.impala.job.defalut.queue", "root_default")
+    val IMPALA_JOB_QUEUE_ = CommonVars("wds.linkis.engine.impala.job.defalut.queue", "root.default")
     val IMPALA_JOB_DEFALUT_QUEUE = CommonVars("wds.linkis.engine.impala.job.defalut.queue", "root.default")
 
 }

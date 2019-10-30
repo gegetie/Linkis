@@ -24,13 +24,11 @@ import com.webank.wedatasphere.linkis.protocol.engine.JobProgressInfo
 import com.webank.wedatasphere.linkis.resourcemanager.{ LoadInstanceResource, Resource }
 import com.webank.wedatasphere.linkis.rpc.Sender
 import com.webank.wedatasphere.linkis.scheduler.executer._
-import com.webank.wedatasphere.linkis.engine.impala.common.ImpalaUtils
 import com.webank.wedatasphere.linkis.storage.domain.{ Column, DataType }
 import com.webank.wedatasphere.linkis.storage.resultset.ResultSetFactory
 import com.webank.wedatasphere.linkis.storage.resultset.table.{ TableMetaData, TableRecord }
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
-import org.apache.hadoop.hive.metastore.api.FieldSchema
 import org.apache.hadoop.security.UserGroupInformation
 import org.slf4j.LoggerFactory
 import com.webank.wedatasphere.linkis.engine.impala.exception.ImpalaQueryFailedException
@@ -51,19 +49,19 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
-import cn.techwolf.dap.impala.client.exception.SubmitException
-import cn.techwolf.dap.impala.client.exception.TransportException
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Protocol
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Transport
-import cn.techwolf.dap.impala.client.protocol.ExecProgress
-import cn.techwolf.dap.impala.client.protocol.ExecStatus
-import cn.techwolf.dap.impala.client.ImpalaClient
-import cn.techwolf.dap.impala.client.thrift.ImpalaThriftClientOnHiveServer2
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.SubmitException
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.TransportException
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Protocol
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Transport
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecProgress
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecStatus
+import com.webank.wedatasphere.linkis.engine.impala.client.ImpalaClient
+import com.webank.wedatasphere.linkis.engine.impala.client.thrift.ImpalaThriftClientOnHiveServer2
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * created by cooperyang on 2018/11/22
+ * created by zhuhui on 2019/10/10
  * Description:
  */
 class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ugi: UserGroupInformation) extends EngineExecutor(outputPrintLimit, isSupportParallelism = false) with SingleTaskOperateSupport with SingleTaskInfoSupport {
@@ -75,7 +73,7 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
   private val name: String = Sender.getThisServiceInstance.getInstance
 
   private var totalProgress: Float = 0.0f
- 
+
   private var singleLineProgress: Float = 0.0f
 
   private var stage: Int = 0
@@ -85,13 +83,11 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
   private var singleCodeCompleted: AtomicBoolean = new AtomicBoolean(false)
 
   private var currentSqlProgress: Float = 0.0f
-  
-  private var impalaJobID: String = _
 
-  private var singleSqlProgressList: LinkedBlockingQueue[ImpalaResultListener] =  new LinkedBlockingQueue[ImpalaResultListener]()
-  
-  private var oldprogress:Float = 0f
-  
+  private var singleSqlProgressList: LinkedBlockingQueue[ImpalaResultListener] = new LinkedBlockingQueue[ImpalaResultListener]()
+
+  private var oldprogress: Float = 0f
+
   override def getName: String = name
 
   override def init(): Unit = {
@@ -112,9 +108,9 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
     currentSqlProgress = 0.0f
     var realCode = code.trim()
     //拆行执行
-    while(realCode.startsWith("\n"))  realCode = StringUtils.substringAfter(realCode, "\n")
+    while (realCode.startsWith("\n")) realCode = StringUtils.substringAfter(realCode, "\n")
     LOG.info(s"impala client begins to run hql code:\n ${realCode.trim}")
-    if (realCode.trim.length > 500){
+    if (realCode.trim.length > 500) {
       engineExecutorContext.appendStdout(s"$getName >> ${realCode.trim.substring(0, 500)} ...")
     } else engineExecutorContext.appendStdout(s"$getName >> ${realCode.trim}")
     val tokens = realCode.trim.split("""\s+""")
@@ -125,23 +121,23 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
     var columnCount: Int = 0
     val startTime = System.currentTimeMillis()
     try {
-        var impalaResultListener:ImpalaResultListener = new ImpalaResultListener()
-        impalaResultListener.setEngineExecutorContext(engineExecutorContext)
-        if(null==impalaClient){
-          LOG.error("null  impalaClient!!");
-        }
-        LOG.info(s"impala client begin submit job.")
-        singleSqlProgressList.add(impalaResultListener)
-        impalaJobID = impalaClient.execute(realCode,impalaResultListener);
+      var impalaResultListener: ImpalaResultListener = new ImpalaResultListener()
+      impalaResultListener.setEngineExecutorContext(engineExecutorContext)
+      if (null == impalaClient) {
+        LOG.error("null  impalaClient!!");
+      }
+      LOG.info(s"impala client begin submit job.")
+      singleSqlProgressList.add(impalaResultListener)
+      impalaClient.execute(realCode, impalaResultListener);
     } catch {
       case t: Throwable =>
-                  clearCurrentProgress()
-                  singleCodeCompleted.set(true)
-                  singleSqlProgressList.clear()
+        clearCurrentProgress()
+        singleCodeCompleted.set(true)
+        singleSqlProgressList.clear()
         LOG.error(s"query failed, reason:", t)
         return ErrorExecuteResponse(t.getMessage, t)
     }
-    LOG.info(s"impala client finish job success id:${impalaJobID}")
+    LOG.info(s"impala client finish job success")
     clearCurrentProgress()
     singleCodeCompleted.set(true)
     singleSqlProgressList.clear()
@@ -160,43 +156,42 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
   override def close(): Unit = {
     singleSqlProgressList.clear()
     Utils.tryAndWarnMsg(impalaClient.close())("close session failed")
- 
+
   }
 
   override def progress(): Float = {
-    if (engineExecutorContext != null){
+    if (engineExecutorContext != null) {
       val totalSQLs = engineExecutorContext.getTotalParagraph
       val currentSQL = engineExecutorContext.getCurrentParagraph
       val currentBegin = (currentSQL - 1) / totalSQLs.asInstanceOf[Float]
-      var totalProgress:Float = 0.0F
-      var nowProgress:Float = 0.0F
-     import scala.collection.JavaConversions._
-     singleSqlProgressList.foreach(progress => {
-         LOG.info(s"impala totalProgress is $totalProgress totalSQLs: $totalSQLs, currentSQL: $currentSQL,currentBegin: $currentBegin _name: "+progress.getJobID() +" progress"+progress.getSqlProgress())
-         totalProgress += progress.getSqlProgress()
-     })
-      try{
+      var totalProgress: Float = 0.0F
+      var nowProgress: Float = 0.0F
+      import scala.collection.JavaConversions._
+      singleSqlProgressList.foreach(progress => {
+        LOG.info(s"impala totalProgress is $totalProgress totalSQLs: $totalSQLs, currentSQL: $currentSQL,currentBegin: $currentBegin _name: " + progress.getJobID() + " progress" + progress.getSqlProgress())
+        totalProgress += progress.getSqlProgress()
+      })
+      try {
         nowProgress = (totalProgress / totalSQLs).asInstanceOf[Float]
-      }catch{
-        case e:Exception => nowProgress = 0.0f
-        case _ => nowProgress = 0.0f
+      } catch {
+        case e: Exception => nowProgress = 0.0f
+        case _            => nowProgress = 0.0f
       }
       LOG.info(s"impala progress is $nowProgress")
       if (nowProgress.isNaN) return 0.0f
       (nowProgress + currentBegin)
-    }else 0.0f
+    } else 0.0f
   }
 
-  
-  override def getProgressInfo: Array[JobProgressInfo] =  {
-    val arrayBuffer:ArrayBuffer[JobProgressInfo] = new ArrayBuffer[JobProgressInfo]()
+  override def getProgressInfo: Array[JobProgressInfo] = {
+    val arrayBuffer: ArrayBuffer[JobProgressInfo] = new ArrayBuffer[JobProgressInfo]()
     if (singleSqlProgressList.isEmpty) return arrayBuffer.toArray
     import scala.collection.JavaConversions._
     for (progress <- singleSqlProgressList) {
-      arrayBuffer +=  JobProgressInfo(progress.getJobID(), progress.getTotalScanRanges(), 0,0, progress.getCompletedScanRanges())
+      arrayBuffer += JobProgressInfo(progress.getJobID(), progress.getTotalScanRanges(), 0, 0, progress.getCompletedScanRanges())
     }
     arrayBuffer.toArray
-   }
+  }
 
   override def log(): String = ""
 
@@ -204,12 +199,15 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
     LOG.info("impala begins to kill job")
     //逐个取消任务
     for (progress <- singleSqlProgressList) {
-      impalaClient.cancel(progress.getJobID())
+      Utils.tryCatch(impalaClient.cancel(progress.getJobID())) {
+        case e: Exception => logger.error("c;pse")
+      }
     }
     clearCurrentProgress()
     singleSqlProgressList.clear()
     LOG.info("impala killed job successfully")
     true
+
   }
 
   override def pause(): Boolean = {

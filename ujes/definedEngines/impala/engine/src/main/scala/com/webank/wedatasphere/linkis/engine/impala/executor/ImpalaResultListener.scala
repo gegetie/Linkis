@@ -1,17 +1,17 @@
 package com.webank.wedatasphere.linkis.engine.impala.executor
 
 import java.util
-import cn.techwolf.dap.impala.client.ResultListener
-import cn.techwolf.dap.impala.client.exception.SubmitException
-import cn.techwolf.dap.impala.client.exception.TransportException
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Protocol
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Transport
-import cn.techwolf.dap.impala.client.protocol.ExecProgress
-import cn.techwolf.dap.impala.client.protocol.ExecStatus
-import cn.techwolf.dap.impala.client.ImpalaClient
-import cn.techwolf.dap.impala.client.thrift.ImpalaThriftClientOnHiveServer2
-import cn.techwolf.dap.impala.client.ImpalaResultSet
+import com.webank.wedatasphere.linkis.engine.impala.client.ResultListener
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.SubmitException
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.TransportException
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Protocol
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Transport
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecProgress
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecStatus
+import com.webank.wedatasphere.linkis.engine.impala.client.ImpalaClient
+import com.webank.wedatasphere.linkis.engine.impala.client.thrift.ImpalaThriftClientOnHiveServer2
+import com.webank.wedatasphere.linkis.engine.impala.client.ImpalaResultSet
 import org.slf4j.LoggerFactory
 import com.webank.wedatasphere.linkis.engine.impala.exception.ImpalaQueryFailedException
 import com.webank.wedatasphere.linkis.engine.impala.common.ImpalaUtils
@@ -24,6 +24,10 @@ import scala.collection.mutable.ArrayBuffer
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
 
+/**
+  * created by zhuhui on 2019/10/10
+  * Description:
+  */
 class ImpalaResultListener extends ResultListener {
 
   private val LOG = LoggerFactory.getLogger(getClass)
@@ -59,7 +63,7 @@ class ImpalaResultListener extends ResultListener {
     var columnsString: java.util.List[String] = resultSet.getColumns()
     LOG.info(s"Time taken: ${ImpalaUtils.msDurationToString(System.currentTimeMillis() - startTime)}, begin to fetch results.")
     if (null == columnsString) {
-      throw ImpalaQueryFailedException(41005, "cannot get the field schemas.")
+      throw ImpalaQueryFailedException(41005, "cannot get the schemas of column.")
     }
     import scala.collection.JavaConverters._
     val columns = columnsString.asScala.map(fieldSchema => Column(justFieldName(fieldSchema), null, null)).toArray[Column]

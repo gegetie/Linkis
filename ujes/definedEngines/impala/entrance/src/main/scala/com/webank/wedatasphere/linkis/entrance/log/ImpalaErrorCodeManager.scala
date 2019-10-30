@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * created by cooperyang on 2019/3/14
+  * created by zhuhui on 2019/10/10
   * Description:
   */
 @Component("errorCodeManager")

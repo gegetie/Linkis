@@ -4,7 +4,6 @@ import java.io.PrintStream
 import scala.util.Random
 import scala.collection.mutable.ArrayBuffer
 import com.webank.wedatasphere.linkis.engine.execute.{ EngineExecutor, EngineExecutorFactory }
-import com.webank.wedatasphere.linkis.engine.impala.common.ImpalaUtils
 import com.webank.wedatasphere.linkis.engine.impala.exception.ImpalaSessionStartFailedException
 import com.webank.wedatasphere.linkis.server.JMap
 import org.apache.hadoop.security.UserGroupInformation
@@ -29,17 +28,20 @@ import javax.security.auth.callback.NameCallback
 import javax.security.auth.callback.PasswordCallback
 import javax.security.auth.callback.UnsupportedCallbackException
 import com.webank.wedatasphere.linkis.engine.impala.configuration.ImpalaConfiguration
-import cn.techwolf.dap.impala.client.exception.SubmitException
-import cn.techwolf.dap.impala.client.exception.TransportException
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Protocol
-import cn.techwolf.dap.impala.client.factory.ImpalaClientFactory.Transport
-import cn.techwolf.dap.impala.client.protocol.ExecProgress
-import cn.techwolf.dap.impala.client.protocol.ExecStatus
-import cn.techwolf.dap.impala.client.ImpalaClient
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.SubmitException
+import com.webank.wedatasphere.linkis.engine.impala.client.exception.TransportException
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Protocol
+import com.webank.wedatasphere.linkis.engine.impala.client.factory.ImpalaClientFactory.Transport
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecProgress
+import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecStatus
+import com.webank.wedatasphere.linkis.engine.impala.client.ImpalaClient
 
 
-
+/**
+  * created by zhuhui on 2019/10/10
+  * Description:
+  */
 @Component
 class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -68,7 +70,7 @@ class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
   
   
   /**
-   * 随机去取一个地址；
+   * 随机取一个地址；
    */
   def getCoordinator(ipList: Array[String]): String = Random.shuffle(ipList.toList).head
   
