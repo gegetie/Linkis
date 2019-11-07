@@ -39,9 +39,11 @@ import com.webank.wedatasphere.linkis.engine.impala.client.ImpalaClient
 
 
 /**
-  * created by zhuhui on 2019/10/10
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 任务执行器工厂，session周期，存在服务端连接断掉，未自动重连TODO
+ * 
+ */
 @Component
 class ImpalaEngineExecutorFactory extends EngineExecutorFactory {
   private val logger = LoggerFactory.getLogger(getClass)

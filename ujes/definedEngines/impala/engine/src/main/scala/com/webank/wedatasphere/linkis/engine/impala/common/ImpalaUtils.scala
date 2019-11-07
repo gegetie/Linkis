@@ -24,12 +24,12 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
 /**
-  * created by zhuhui on 2019/11/1
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
+ */
 object ImpalaUtils {
 
-   
   def msDurationToString(ms: Long): String = {
     val second = 1000
     val minute = 60 * second
@@ -46,5 +46,4 @@ object ImpalaUtils {
     }
   }
 
-  
 }

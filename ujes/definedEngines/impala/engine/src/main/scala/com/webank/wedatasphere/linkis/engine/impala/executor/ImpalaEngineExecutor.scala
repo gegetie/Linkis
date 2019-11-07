@@ -61,8 +61,9 @@ import com.webank.wedatasphere.linkis.engine.impala.client.thrift.ImpalaThriftCl
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * created by zhuhui on 2019/10/10
- * Description:
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
  */
 class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ugi: UserGroupInformation) extends EngineExecutor(outputPrintLimit, isSupportParallelism = false) with SingleTaskOperateSupport with SingleTaskInfoSupport {
 
@@ -82,11 +83,7 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
 
   private var singleCodeCompleted: AtomicBoolean = new AtomicBoolean(false)
 
-  private var currentSqlProgress: Float = 0.0f
-
   private var singleSqlProgressList: LinkedBlockingQueue[ImpalaResultListener] = new LinkedBlockingQueue[ImpalaResultListener]()
-
-  private var oldprogress: Float = 0f
 
   override def getName: String = name
 
@@ -105,7 +102,6 @@ class ImpalaEngineExecutor(outputPrintLimit: Int, impalaClient: ImpalaClient, ug
     //Clear the data of singleSqlMap(清空singleSqlMap的数据)
     singleSqlProgressList.clear()
     singleCodeCompleted.set(false)
-    currentSqlProgress = 0.0f
     var realCode = code.trim()
     //拆行执行
     while (realCode.startsWith("\n")) realCode = StringUtils.substringAfter(realCode, "\n")

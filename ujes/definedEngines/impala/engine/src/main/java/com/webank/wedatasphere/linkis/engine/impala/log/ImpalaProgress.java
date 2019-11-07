@@ -17,8 +17,11 @@
 package com.webank.wedatasphere.linkis.engine.impala.log;
 
 /**
- * created by cooperyang on 2019/2/12
- * Description:
+ * 
+ * @Author liangqilang
+ * @Mail zhuhui@kanzhun.com
+ * @Desctiption 
+ * @Date 2019-11-01
  */
 public class ImpalaProgress {
     private int stage;

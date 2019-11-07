@@ -48,15 +48,16 @@ object HiveUtils {
   }
 
   def getHiveConf:HiveConf = {
-    val confDir:File = new File(EnvConfiguration.HADOOP_CONF_DIR.getValue)
+    val confDir:File = new File(EnvConfiguration.HIVE_CONF_DIR.getValue)
     if (!confDir.exists() || confDir.isFile){
-      throw HadoopConfSetFailedException(41001, "hadoop conf set failed, reason: conf dir does not exist")
+      throw HadoopConfSetFailedException(41001, "hive conf set failed, reason: conf dir does not exist")
     }
-    val hadoopConf:Configuration = new Configuration()
-    hadoopConf.addResource(new Path(Paths.get(EnvConfiguration.HADOOP_CONF_DIR.getValue, "core-site.xml").toAbsolutePath.toFile.getAbsolutePath))
-    hadoopConf.addResource(new Path(Paths.get(EnvConfiguration.HADOOP_CONF_DIR.getValue, "hdfs-site.xml").toAbsolutePath.toFile.getAbsolutePath))
-    hadoopConf.addResource(new Path(Paths.get(EnvConfiguration.HADOOP_CONF_DIR.getValue, "yarn-site.xml").toAbsolutePath.toFile.getAbsolutePath))
-    new conf.HiveConf(hadoopConf, classOf[Driver])
+    val hiveConf:Configuration = new Configuration()
+    hiveConf.addResource(new Path(Paths.get(EnvConfiguration.HIVE_CONF_DIR.getValue, "core-site.xml").toAbsolutePath.toFile.getAbsolutePath))
+    hiveConf.addResource(new Path(Paths.get(EnvConfiguration.HIVE_CONF_DIR.getValue, "hdfs-site.xml").toAbsolutePath.toFile.getAbsolutePath))
+    hiveConf.addResource(new Path(Paths.get(EnvConfiguration.HIVE_CONF_DIR.getValue, "yarn-site.xml").toAbsolutePath.toFile.getAbsolutePath))
+    hiveConf.addResource(new Path(Paths.get(EnvConfiguration.HIVE_CONF_DIR.getValue, "hive-site.xml").toAbsolutePath.toFile.getAbsolutePath))
+    new conf.HiveConf(hiveConf, classOf[Driver])
   }
 
 

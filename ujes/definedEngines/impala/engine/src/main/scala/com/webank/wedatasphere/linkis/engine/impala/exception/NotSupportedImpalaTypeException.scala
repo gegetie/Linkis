@@ -19,9 +19,10 @@ package com.webank.wedatasphere.linkis.engine.impala.exception
 import com.webank.wedatasphere.linkis.common.exception.ErrorException
 
 /**
-  * created by cooperyang on 2018/11/22
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
+ */
 case class NotSupportedImpalaTypeException(errCode:Int,
                                          desc:String) extends ErrorException(errCode, desc) {
 

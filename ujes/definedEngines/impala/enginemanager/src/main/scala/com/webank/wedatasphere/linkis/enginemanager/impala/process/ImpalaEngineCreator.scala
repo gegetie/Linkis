@@ -21,9 +21,10 @@ import com.webank.wedatasphere.linkis.enginemanager.process.ProcessEngineBuilder
 import org.springframework.stereotype.Component
 
 /**
-  * created by zhuhui on 2019/10/10
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
+ */
 @Component("engineCreator")
 class ImpalaEngineCreator extends AbstractEngineCreator{
   override protected def createProcessEngineBuilder(): ProcessEngineBuilder = {

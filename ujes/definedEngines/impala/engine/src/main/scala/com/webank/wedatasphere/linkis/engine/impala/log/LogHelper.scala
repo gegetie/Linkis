@@ -21,11 +21,6 @@ import java.util
 import org.slf4j.LoggerFactory
 
 
-/**
-  * created by cooperyang on 2019/2/12
-  * Description:
-  */
-
 
 object LogHelper {
   private val logPattern = """Stage-(\d+)\s+map\s+=\s+(\d+)%,\s+reduce\s+=\s+(\d+)%""".r.unanchored

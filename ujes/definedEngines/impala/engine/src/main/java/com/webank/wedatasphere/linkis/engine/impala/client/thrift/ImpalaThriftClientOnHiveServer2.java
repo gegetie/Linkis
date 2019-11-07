@@ -64,25 +64,21 @@ import com.webank.wedatasphere.linkis.engine.impala.client.protocol.ExecSummary;
 import com.webank.wedatasphere.linkis.engine.impala.client.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 
-
 /**
  * 基于Thrift协议并以HiveServer2进行通信的Impala客户端
+ * 
  * @author dingqihuang
  * @version Sep 20, 2019
  */
 @Slf4j
 public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements ImpalaClient {
-	
+
 	/*
 	 * 可选变参数区
 	 */
-	
+
 	private int batchSize = Constant.DEFAULT_BATCH_SIZE;
-	
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
-	
+
 	/*
 	 * 必须参数区
 	 */
@@ -96,152 +92,156 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	private volatile boolean closed;
 	private int parallel;
 	private Object mutex = new Object();
-	
+
 	private Timer timer;
-	
-	
-	public ImpalaThriftClientOnHiveServer2(TTransport transport, int parallelLimit, int heartBeatsInSecond) 
+
+	public ImpalaThriftClientOnHiveServer2(TTransport transport, int parallelLimit, int heartBeatsInSecond)
 			throws TransportException {
 		try {
-			if(!transport.isOpen()) {
+			if (!transport.isOpen()) {
 				transport.open();
 			}
-	
+
 			client = new ImpalaHiveServer2Service.Client(new TBinaryProtocol(transport));
 			TOpenSessionReq openReq = new TOpenSessionReq();
 			openReq.setClient_protocol(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V7);
 			TOpenSessionResp openResp = client.OpenSession(openReq);
 			session = openResp.getSessionHandle();
-		}
-		catch(TException e) {
+		} catch (TException e) {
 			throw TransportException.of(e);
 		}
-		if(session==null || !session.isSetSessionId()) {
+		if (session == null || !session.isSetSessionId()) {
 			transport.close();
 			throw TransportException.of(ExceptionCode.CommunicateError);
 		}
-		
+
 		this.transport = transport;
 		this.handlers = Maps.newConcurrentMap();
 		this.queryOptions = Maps.newConcurrentMap();
 		this.parallelLimit = parallelLimit;
 		this.parallel = 0;
-		this.heartBeatsInMilliSecond = heartBeatsInSecond*1000;
+		this.heartBeatsInMilliSecond = heartBeatsInSecond * 1000;
 		this.closed = false;
-		
+
 	}
-	
+
 	@Override
 	public void close() throws Exception {
 		this.closed = true;
-		
-		if(timer!=null) {
+
+		if (timer != null) {
 			timer.cancel();
 		}
-		
-		for(ExecHandler handler:handlers.values()) {
+
+		for (ExecHandler handler : handlers.values()) {
 			cancel(handler);
 		}
-		
-		if(session!=null && session.isSetSessionId()) {
+
+		if (session != null && session.isSetSessionId()) {
 			TCloseSessionReq closeConnectionReq = new TCloseSessionReq(session);
 			client.CloseSession(closeConnectionReq);
 		}
-		
+
 		transport.close();
 	}
 
 	/**
 	 * 处理通信返回结果的状态
+	 * 
 	 * @param status
-	 * @param resultListener 用于接收错误信息
-	 * @param messageListener 用于接收警告信息
+	 * @param resultListener
+	 *            用于接收错误信息
+	 * @param messageListener
+	 *            用于接收警告信息
 	 * @throws SubmitException
 	 */
 	private void checkStatus(TStatus status, ResultListener resultListener) throws SubmitException {
-		switch(status.getStatusCode()) {
-			
-			case STILL_EXECUTING_STATUS:
-				throw SubmitException.of(ExceptionCode.StillRunningError);
-			case ERROR_STATUS:
-				throw SubmitException.of(ExceptionCode.ExecutionError, status.getErrorMessage());
-			case INVALID_HANDLE_STATUS:
-				throw SubmitException.of(ExceptionCode.InvalidHandleError);
-			case SUCCESS_WITH_INFO_STATUS:
-				if(resultListener!=null) {
-					resultListener.message(status.getInfoMessages());
-				}
-				break;
-			case SUCCESS_STATUS:
+		switch (status.getStatusCode()) {
+
+		case STILL_EXECUTING_STATUS:
+			throw SubmitException.of(ExceptionCode.StillRunningError);
+		case ERROR_STATUS:
+			throw SubmitException.of(ExceptionCode.ExecutionError, status.getErrorMessage());
+		case INVALID_HANDLE_STATUS:
+			throw SubmitException.of(ExceptionCode.InvalidHandleError);
+		case SUCCESS_WITH_INFO_STATUS:
+			if (resultListener != null) {
+				resultListener.message(status.getInfoMessages());
+			}
+			break;
+		case SUCCESS_STATUS:
 		}
 	}
-	
+
 	/**
 	 * 并行锁
+	 * 
 	 * @throws SubmitException
 	 */
 	private void lock(boolean startHeartBeat) throws SubmitException {
-		synchronized(mutex) {
-			if(parallelLimit<=parallel) {
+		synchronized (mutex) {
+			if (parallelLimit <= parallel) {
 				throw SubmitException.of(ExceptionCode.ParallelLimitError);
 			}
-			
+
 			++parallel;
-			if(startHeartBeat && timer==null) {
+			if (startHeartBeat && timer == null) {
 				timer = new Timer();
 				timer.schedule(this, heartBeatsInMilliSecond, heartBeatsInMilliSecond);
 			}
 		}
 	}
-	
+
 	/**
 	 * 释放并行锁
+	 * 
 	 * @throws SubmitException
 	 */
 	private void release() {
-		synchronized(mutex) {
+		synchronized (mutex) {
 			--parallel;
-			if(timer!=null&&handlers.isEmpty()) {
+			if (timer != null && handlers.isEmpty()) {
 				timer.cancel();
 				timer = null;
 			}
 		}
 	}
-	
+
 	/**
 	 * 删除handler并释放并行锁
+	 * 
 	 * @throws SubmitException
 	 */
 	private void release(String queryId) {
-		if(queryId==null) {
+		if (queryId == null) {
 			return;
 		}
-		
+
 		ExecHandler handler = handlers.remove(queryId);
-		if(handler!=null) {
-			
+		if (handler != null) {
+
 			/*
 			 * 关闭任务
 			 */
 			close(handler);
-			
+
 			release();
 		}
 	}
-	
+
 	private TExecuteStatementResp submitExecuteStatment(String sql, boolean async) throws TException {
 		TExecuteStatementReq execReq = new TExecuteStatementReq(session, sql);
 		execReq.setRunAsync(async);
 		execReq.setConfOverlay(queryOptions);
 		return client.ExecuteStatement(execReq);
 	}
-	
+
 	@Override
 	public void execute(String sql, ResultListener resultListener) throws TransportException, SubmitException {
-		if(closed) {
+		if (closed) {
 			throw SubmitException.of(ExceptionCode.ClosedError);
 		}
-		
+
 		lock(false);
 		ExecHandler handler = null;
 		try {
@@ -249,102 +249,95 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 			 * 提交查询请求
 			 */
 			TExecuteStatementResp execResp = submitExecuteStatment(sql, false);
-			
+
 			/*
 			 * 检查通讯结果
 			 */
 			checkStatus(execResp.getStatus(), resultListener);
-			
+
 			/*
 			 * 处理返回结果
 			 */
 			TOperationHandle operation = execResp.getOperationHandle();
-			if(operation == null) {
+			if (operation == null) {
 				throw SubmitException.of(ExceptionCode.CommunicateError);
 			}
-			
+
 			/*
 			 * 轮询
 			 */
 			ExecSummary summary = null;
-			handler = ExecHandler.of(null, operation, resultListener, 0, false);
+			handler = new ExecHandler(null, operation, resultListener, 0, false);
 			while (true) {
 				Thread.sleep(heartBeatsInMilliSecond);
 				summary = getExecSummary(handler);
-				if(summary==null || !summary.getStatus().isActive()) {
+				if (summary == null || !summary.getStatus().isActive()) {
 					break;
 				}
-				if(resultListener!=null) {
+				if (resultListener != null) {
 					resultListener.progress(summary.getProgress());
 				}
 			}
-			
-			if(summary==null) {
+
+			if (summary == null) {
 				throw SubmitException.of(ExceptionCode.CommunicateError);
 			}
-			
-			if(summary.getStatus().hasError()) {
-				if(resultListener!=null) {
+
+			if (summary.getStatus().hasError()) {
+				if (resultListener != null) {
 					resultListener.error(summary.getStatus());
 				}
-			}
-			else {
+			} else {
 				fetchResult(null, operation, resultListener);
 			}
-			
-		}
-		catch(InterruptedException e) {
+
+		} catch (InterruptedException e) {
 			/*
 			 * 进程被kill，关闭句柄
 			 */
 			close(handler);
 			log.warn("The query was interrupted.", e);
-		}
-		catch(TException e) {
+		} catch (TException e) {
 			throw TransportException.of(e);
-		}
-		finally {
+		} finally {
 			/*
 			 * 同步执行，完毕释放并行信号
 			 */
 			release();
 		}
 	}
-	
 
 	@Override
-	public String executeAsync(String sql, ResultListener resultListener) 
-			throws TransportException, SubmitException {
-		if(closed) {
+	public String executeAsync(String sql, ResultListener resultListener) throws TransportException, SubmitException {
+		if (closed) {
 			throw SubmitException.of(ExceptionCode.ClosedError);
 		}
-		
+
 		lock(true);
-		
+
 		try {
 			/*
 			 * 提交查询请求
 			 */
 			TExecuteStatementResp execResp = submitExecuteStatment(sql, true);
-			
+
 			/*
 			 * 检查通讯结果
 			 */
 			checkStatus(execResp.getStatus(), resultListener);
-			
+
 			/*
 			 * 处理返回结果
 			 */
 			TOperationHandle operation = execResp.getOperationHandle();
-			if(operation == null) {
+			if (operation == null) {
 				throw SubmitException.of(ExceptionCode.CommunicateError);
 			}
-			
+
 			String queryId = printUniqueId(operation.getOperationId().getGuid());
-			handlers.put(queryId, ExecHandler.of(queryId, operation, resultListener, 0, false));
+			handlers.put(queryId, new ExecHandler(queryId, operation, resultListener, 0, false));
 			return queryId;
-		}
-		catch(TException e) {
+		} catch (TException e) {
 			/*
 			 * 异步执行，只在报错时释放并行信号
 			 */
@@ -357,9 +350,9 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	public void cancel(String queryId) throws TransportException {
 		cancel(handlers.get(queryId));
 	}
-	
+
 	private void cancel(ExecHandler handler) throws TransportException {
-		if(handler==null) {
+		if (handler == null) {
 			return;
 		}
 		/*
@@ -367,20 +360,20 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 		 */
 		try {
 			TCancelOperationReq cancelReq = new TCancelOperationReq();
-			cancelReq.setOperationHandle((TOperationHandle)handler.getHandler());
+			cancelReq.setOperationHandle((TOperationHandle) handler.getHandler());
 			client.CancelOperation(cancelReq);
 		} catch (Exception e) {
 			throw TransportException.of(e);
 		}
-		
+
 		/*
 		 * 释放任务
 		 */
 		release(handler.getQueryId());
 	}
-	
+
 	private void close(ExecHandler handler) {
-		if(handler==null) {
+		if (handler == null) {
 			return;
 		}
 		/*
@@ -388,7 +381,7 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 		 */
 		try {
 			TCloseOperationReq closeReq = new TCloseOperationReq();
-			closeReq.setOperationHandle((TOperationHandle)handler.getHandler());
+			closeReq.setOperationHandle((TOperationHandle) handler.getHandler());
 			client.CloseOperation(closeReq);
 		} catch (Exception e) {
 			log.warn("Failed to close the query.", e);
@@ -399,67 +392,62 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	public ExecSummary getExecSummary(String queryId) throws TransportException {
 		return getExecSummary(handlers.get(queryId));
 	}
-	
+
 	private ExecSummary getExecSummary(ExecHandler handler) throws TransportException {
-		if(handler==null) {
+		if (handler == null) {
 			return null;
 		}
 		try {
-			TOperationHandle operation = (TOperationHandle)handler.getHandler();
+			TOperationHandle operation = (TOperationHandle) handler.getHandler();
 			/*
 			 * 先获取运行状态
 			 */
 			ExecStatus status = getExecStatus(operation);
-			
-			if(status==null) {
+
+			if (status == null) {
 				return null;
 			}
-			
-			ExecProgress progress = null; 
+
+			ExecProgress progress = null;
 			int nodeNum = -1;
-			
+
 			/*
 			 * 状态有效，获取进度信息
 			 */
-			if(status.isActive()) {
+			if (status.isActive()) {
 				/*
 				 * 查询summary
 				 */
 				TGetExecSummaryReq getExecSummaryReq = new TGetExecSummaryReq();
 				getExecSummaryReq.setOperationHandle(operation);
 				getExecSummaryReq.setSessionHandle(session);
-				
+
 				TGetExecSummaryResp execSummaryResp = client.GetExecSummary(getExecSummaryReq);
 				checkStatus(execSummaryResp.getStatus(), null);
-				
+
 				TExecSummary summary = execSummaryResp.getSummary();
 				nodeNum = summary.getNodesSize();
-				
-				if(handler.isQueued()) {
+
+				if (handler.isQueued()) {
 					progress = new ExecProgress(-1, -1);
-				}
-				else if(summary.isIs_queued()) {
+				} else if (summary.isIs_queued()) {
 					handler.setQueued(true);
 					ResultListener resultListener = handler.getResultListener();
-					if(resultListener!=null) {
+					if (resultListener != null) {
 						resultListener.message(Lists.newArrayList(summary.getQueued_reason()));
 					}
 					progress = new ExecProgress(-1, -1);
-				}
-				else {
+				} else {
 					TExecProgress p = summary.getProgress();
-					if(p!=null) {
+					if (p != null) {
 						progress = new ExecProgress(p.total_scan_ranges, p.num_completed_scan_ranges);
 					}
 				}
-					
+
 			}
 
-			return ExecSummary.of(
-					status, 
-					progress, 
-					nodeNum);
-			
+			return new ExecSummary(status, progress, nodeNum);
+
 		} catch (TException | SubmitException e) {
 			throw TransportException.of(e);
 		}
@@ -468,7 +456,7 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	@Override
 	public ExecProgress getExecProgress(String queryId) throws TransportException {
 		ExecSummary summary = getExecSummary(queryId);
-		if(summary!=null) {
+		if (summary != null) {
 			return summary.getProgress();
 		}
 		return null;
@@ -477,12 +465,12 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	@Override
 	public ExecStatus getExecStatus(String queryId) throws TransportException {
 		ExecHandler handler = handlers.get(queryId);
-		if(handler!=null) {
-			return getExecStatus((TOperationHandle)handler.getHandler());
+		if (handler != null) {
+			return getExecStatus((TOperationHandle) handler.getHandler());
 		}
 		return null;
 	}
-	
+
 	private ExecStatus getExecStatus(TOperationHandle operation) throws TransportException {
 		try {
 			/*
@@ -492,8 +480,8 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 			TGetOperationStatusResp statusResp = client.GetOperationStatus(statusReq);
 			checkStatus(statusResp.getStatus(), null);
 			TOperationState operationState = statusResp.getOperationState();
-			
-			return new ExecStatus(operationState.getValue(),operationState.name(),statusResp.getErrorMessage());
+
+			return new ExecStatus(operationState.getValue(), operationState.name(), statusResp.getErrorMessage());
 		} catch (TException | SubmitException e) {
 			throw TransportException.of(e);
 		}
@@ -501,110 +489,109 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 
 	@Override
 	public void setRequestPool(String poolName) throws TransportException {
-		if(StringUtils.isBlank(poolName)) {
+		if (StringUtils.isBlank(poolName)) {
 			unsetQueryOption(Constant.REQUEST_POOL);
-		}
-		else {
+		} else {
 			setQueryOption(Constant.REQUEST_POOL, poolName);
 		}
-		
+
 	}
-	
+
 	@Override
 	public void setQueryOption(String key, String value) throws TransportException {
-		if(StringUtils.isNotBlank(value)) {
+		if (StringUtils.isNotBlank(value)) {
 			queryOptions.put(key, value);
 		}
 	}
-	
+
 	@Override
 	public void unsetQueryOption(String key) throws TransportException {
 		queryOptions.remove(key);
 	}
-	
+
 	private void fetchResult(ExecHandler handler) {
-		if(handler!=null) {
-			fetchResult(handler.getQueryId(), (TOperationHandle)handler.getHandler(), handler.getResultListener());
+		if (handler != null) {
+			fetchResult(handler.getQueryId(), (TOperationHandle) handler.getHandler(), handler.getResultListener());
 		}
 	}
-	
+
 	private void fetchResult(String queryId, TOperationHandle operation, ResultListener resultListener) {
 		RemoveTaskDelegator delegator = null;
-		
+
 		/*
 		 * 异步任务，创建关闭任务的委托
 		 */
-		if(StringUtils.isNotBlank(queryId) && handlers.containsKey(queryId)) {
+		if (StringUtils.isNotBlank(queryId) && handlers.containsKey(queryId)) {
 			delegator = new RemoveTaskDelegator(this, queryId);
 		}
-		
+
 		ResultSet rs = new ResultSet(client, operation, batchSize, delegator);
-		if(resultListener!=null) {
+		if (resultListener != null) {
 			resultListener.success(rs);
 		}
-		
 
-		if(delegator!=null) {
+		if (delegator != null) {
 			delegator.run();
 		}
 	}
-	
-	private static final byte[] bitMask = {(byte)0x01, (byte)0x02, (byte)0x04, (byte)0x08,
-											(byte)0x10, (byte)0x20, (byte)0x40, (byte)0x80};
+
+	private static final byte[] bitMask = { (byte) 0x01, (byte) 0x02, (byte) 0x04, (byte) 0x08, (byte) 0x10,
+			(byte) 0x20, (byte) 0x40, (byte) 0x80 };
 	private static final char[] hexCode = "0123456789abcdef".toCharArray();
+
 	/*
 	 * impala 输出id的格式
 	 */
 	public static String printUniqueId(byte[] b) {
 		StringBuilder sb = new StringBuilder(":");
-		for(int i=0;i<8;++i) {
-			sb.append(hexCode[(b[15-i] >> 4) & 0xF]);
-			sb.append(hexCode[(b[15-i] & 0xF)]);
+		for (int i = 0; i < 8; ++i) {
+			sb.append(hexCode[(b[15 - i] >> 4) & 0xF]);
+			sb.append(hexCode[(b[15 - i] & 0xF)]);
 			sb.insert(0, hexCode[(b[i] & 0xF)]);
 			sb.insert(0, hexCode[(b[i] >> 4) & 0xF]);
 		}
 		return sb.toString();
 	}
-	
+
 	protected class RemoveTaskDelegator implements Runnable {
 		private ImpalaThriftClientOnHiveServer2 context;
 		private String queryId;
-		
+
 		private RemoveTaskDelegator(ImpalaThriftClientOnHiveServer2 context, String queryId) {
 			this.context = context;
 			this.queryId = queryId;
 		}
-		
+
 		@Override
 		public void run() {
 			context.release(queryId);
 		}
 	}
-	
+
 	/**
 	 * 结果集类
+	 * 
 	 * @author dingqihuang
 	 *
 	 * @version Sep 20, 2019
 	 *
 	 */
 	protected class ResultSet implements ImpalaResultSet {
-		
-		
+
 		private ImpalaHiveServer2Service.Client client;
 		private TOperationHandle operation;
 		private TFetchResultsReq fetchReq;
 		private Runnable onClose;
 		private boolean closed;
-		
+
 		private int index;
 		private int size;
-		
+
 		/*
 		 * 默认远端有数据
 		 */
 		private boolean hasMoreRow = true;
-		
+
 		/*
 		 * 保存数据
 		 */
@@ -613,13 +600,13 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 		private Object[] values = null;
 		private Class<?>[] types = null;
 		private List<String> columns = null;
-		
-		private ResultSet(ImpalaHiveServer2Service.Client client, 
-				TOperationHandle operation, int batchSize, Runnable onClose) {
+
+		private ResultSet(ImpalaHiveServer2Service.Client client, TOperationHandle operation, int batchSize,
+				Runnable onClose) {
 			this.client = client;
 			this.operation = operation;
 			this.onClose = onClose;
-			
+
 			this.closed = false;
 			this.index = -1;
 			this.size = 0;
@@ -627,17 +614,20 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 			this.fetchReq.setMaxRows(100);
 			this.fetchReq.setOperationHandle(operation);
 		}
-		
+
 		/**
 		 * 解析字段
-		 * @param column 字段
-		 * @param index 顺序
+		 * 
+		 * @param column
+		 *            字段
+		 * @param index
+		 *            顺序
 		 */
 		private void unpackColumn(TColumn column, int index) {
 			Iterator<?> result = null;
 			byte[] nls = null;
 			Class<?> cls = null;
-			switch(column.getSetField()) {
+			switch (column.getSetField()) {
 			case BINARY_VAL:
 				TBinaryColumn binVal = column.getBinaryVal();
 				result = binVal.getValuesIterator();
@@ -691,7 +681,7 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 			nulls[index] = nls;
 			types[index] = cls;
 		}
-		
+
 		/**
 		 * 从远端请求数据
 		 */
@@ -705,7 +695,7 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 				nulls = null;
 				values = null;
 				types = null;
-				
+
 				/*
 				 * 请求数据
 				 */
@@ -714,36 +704,36 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 				if (status.getStatusCode().getValue() > TStatusCode.SUCCESS_WITH_INFO_STATUS.getValue()) {
 					return;
 				}
-				
+
 				/*
 				 * 远端是否还有数据
 				 */
 				hasMoreRow = resp.isHasMoreRows();
-				
+
 				/*
 				 * 转换返回结果
 				 */
 				TRowSet result = resp.getResults();
 				List<TColumn> list = result.getColumns();
-				if(list!=null) {
+				if (list != null) {
 					index = -1;
-					
+
 					/*
 					 * 初始化本地缓冲区
 					 */
-					if(iterators==null) {
+					if (iterators == null) {
 						size = list.size();
 						iterators = new Iterator[size];
 						nulls = new byte[size][];
 						values = new Object[size];
 						types = new Class[size];
 					}
-					
+
 					/*
 					 * 填充缓冲区
 					 */
-					int i=0;
-					for(TColumn item:list) {
+					int i = 0;
+					for (TColumn item : list) {
 						unpackColumn(item, i);
 						++i;
 					}
@@ -752,31 +742,31 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 				throw new RuntimeException(e);
 			}
 		}
-		
+
 		@Override
 		public boolean next() {
-			if(closed) {
+			if (closed) {
 				return false;
 			}
-			
+
 			/*
 			 * 本地没有数据，且远端有数据，则请求新数据
 			 */
-			if((iterators==null || !iterators[0].hasNext()) && hasMoreRow) {
+			if ((iterators == null || !iterators[0].hasNext()) && hasMoreRow) {
 				fetch();
 			}
-			
+
 			/*
 			 * 读取本地数据
 			 */
-			if(iterators!=null && iterators[0].hasNext()) {
-				for(int i=0;i<iterators.length;++i) {
+			if (iterators != null && iterators[0].hasNext()) {
+				for (int i = 0; i < iterators.length; ++i) {
 					values[i] = iterators[i].next();
 				}
 				++index;
 				return true;
 			}
-			
+
 			/*
 			 * 数据读取完毕，释放
 			 */
@@ -789,22 +779,22 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 		}
 
 		private boolean isNull(int columnIndex) {
-			return (nulls[columnIndex][index/8] & bitMask[index%8]) != 0;
+			return (nulls[columnIndex][index / 8] & bitMask[index % 8]) != 0;
 		}
-		
+
 		@Override
 		public Object getObject(int columnIndex) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
 			return values[columnIndex];
 		}
-		
+
 		@Override
 		public <T> T getObject(int columnIndex, Class<T> clasz) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
 			return clasz.cast(values[columnIndex]);
@@ -813,78 +803,77 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 		@Override
 		public String getString(int columnIndex) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
-			return (String)values[columnIndex];
+			return (String) values[columnIndex];
 		}
 
 		@Override
 		public Short getShort(int columnIndex) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
-			return (Short)values[columnIndex];
+			return (Short) values[columnIndex];
 		}
-		
+
 		@Override
 		public Integer getInteger(int columnIndex) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
-			return (Integer)values[columnIndex];
+			return (Integer) values[columnIndex];
 		}
 
 		@Override
 		public Long getLong(int columnIndex) {
 			--columnIndex;
-			if(isNull(columnIndex)) {
+			if (isNull(columnIndex)) {
 				return null;
 			}
-			return (Long)values[columnIndex];
+			return (Long) values[columnIndex];
 		}
 
 		@Override
 		public int getColumnSize() {
 			return values.length;
 		}
-		
+
 		@Override
 		public Class<?> getType(int columnIndex) {
 			--columnIndex;
 			return types[columnIndex];
 		}
 
-		
 		@Override
 		public List<String> getColumns() {
-			if(columns==null) {
-				
+			if (columns == null) {
+
 				try {
 					/*
 					 * 请求元数据
 					 */
 					TGetResultSetMetadataReq metadataReq = new TGetResultSetMetadataReq(operation);
 					TGetResultSetMetadataResp metadataResp = client.GetResultSetMetadata(metadataReq);
-					
+
 					checkStatus(metadataResp.getStatus(), null);
-					
+
 					TTableSchema tableSchema = metadataResp.getSchema();
-					
-		            if (tableSchema != null) {
-		            	List<TColumnDesc> columnDescs = tableSchema.getColumns();
-		            	columns = Lists.newArrayListWithExpectedSize(columnDescs.size());
-		                for (TColumnDesc tColumnDesc : columnDescs) {
-		                    columns.add(tColumnDesc.getColumnName());
-		                }
-		            }
+
+					if (tableSchema != null) {
+						List<TColumnDesc> columnDescs = tableSchema.getColumns();
+						columns = Lists.newArrayListWithExpectedSize(columnDescs.size());
+						for (TColumnDesc tColumnDesc : columnDescs) {
+							columns.add(tColumnDesc.getColumnName());
+						}
+					}
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
-				
-				if(columns==null) {
+
+				if (columns == null) {
 					columns = Lists.newArrayListWithExpectedSize(0);
 				}
 			}
@@ -893,7 +882,7 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 
 		@Override
 		public void close() throws Exception {
-			if(closed && onClose!=null) {
+			if (closed && onClose != null) {
 				onClose.run();
 			}
 			closed = true;
@@ -911,30 +900,28 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	@Override
 	public void run() {
 		log.info("Impala client heart beats.");
-		for(ExecHandler handler:Lists.newArrayList(handlers.values())) {
+		for (ExecHandler handler : Lists.newArrayList(handlers.values())) {
 			try {
 				ExecSummary summary = getExecSummary(handler);
 				ResultListener resultListener = handler.getResultListener();
 				ExecStatus status = summary.getStatus();
-				if(status.isActive()) {
+				if (status.isActive()) {
 					/*
 					 * 正在执行，查询执行信息
 					 */
-					if(resultListener!=null && summary.getProgress()!=null) {
+					if (resultListener != null && summary.getProgress() != null) {
 						resultListener.progress(summary.getProgress());
 					}
-				}
-				else if(status.hasError()) {
-					if(resultListener!=null) {
+				} else if (status.hasError()) {
+					if (resultListener != null) {
 						resultListener.error(summary.getStatus());
 					}
 					release(handler.getQueryId());
-				}
-				else {
+				} else {
 					fetchResult(handler);
 				}
-			} catch (Exception  e) {
-				if(handler.markError()>=Constant.DEFAULT_ERROR_INDURANCE) {
+			} catch (Exception e) {
+				if (handler.markError() >= Constant.DEFAULT_ERROR_INDURANCE) {
 					release(handler.getQueryId());
 				}
 				log.warn("Fetch status error.", e);
@@ -945,5 +932,9 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
 	@Override
 	public int getExecutionCount() {
 		return parallel;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 }

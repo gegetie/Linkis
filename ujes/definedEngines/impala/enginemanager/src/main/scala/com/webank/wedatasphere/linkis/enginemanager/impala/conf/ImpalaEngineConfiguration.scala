@@ -18,12 +18,15 @@ package com.webank.wedatasphere.linkis.enginemanager.impala.conf
 
 import com.webank.wedatasphere.linkis.common.conf.{ByteType, CommonVars}
 
+
 /**
-  * created by cooperyang on 2018/11/22
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
+ */
 object ImpalaEngineConfiguration {
     val IMPALA_CLIENT_MEMORY = CommonVars("impala.client.memory", new ByteType("2g"), "Specify the memory size of the hiveCli client(指定hiveCli客户端的内存大小)")
+    
     val IMPALA_CLIENT_OPTS = CommonVars("impala.client.java.opts", "-server -XX:+UseG1GC -XX:MaxPermSize=250m -XX:PermSize=128m " +
       "-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps",
       "Specify the option parameter of the ImpalaCli process (please modify it carefully!!!)(指定ImpalaCli进程的option参数（请谨慎修改！！！）)")

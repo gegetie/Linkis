@@ -14,7 +14,6 @@ public interface ImpalaResultSet extends AutoCloseable {
 	 * @return true if exist
 	 */
 	boolean next();
-	
 	public Object[] getValues();
 	public Object getObject(int columnIndex);
 	public <T> T getObject(int columnIndex, Class<T> clasz);

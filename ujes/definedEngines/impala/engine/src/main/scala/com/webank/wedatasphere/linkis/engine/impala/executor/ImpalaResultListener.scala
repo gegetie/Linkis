@@ -25,9 +25,10 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
 
 /**
-  * created by zhuhui on 2019/10/10
-  * Description:
-  */
+ *
+ * Created by liangqilang on 2019-11-01 zhuhui@kanzhun.com
+ * 
+ */
 class ImpalaResultListener extends ResultListener {
 
   private val LOG = LoggerFactory.getLogger(getClass)
@@ -42,9 +43,6 @@ class ImpalaResultListener extends ResultListener {
 								
   private var engineExecutorContext: EngineExecutorContext = _
 
-  def setEngineExecutorContext(engineExecutorContext: EngineExecutorContext) {
-    this.engineExecutorContext = engineExecutorContext
-  }
 
   def getJobID(): String = this.impalaJobID
 
@@ -57,7 +55,11 @@ class ImpalaResultListener extends ResultListener {
   @Override def setJobId(jobId : String){
      this.impalaJobID = jobId;
   }
-  
+
+  def setEngineExecutorContext(engineExecutorContext: EngineExecutorContext) {
+    this.engineExecutorContext = engineExecutorContext
+  }
+    
   @Override def success(resultSet: ImpalaResultSet) {
     val startTime = System.currentTimeMillis()
     var columnsString: java.util.List[String] = resultSet.getColumns()
