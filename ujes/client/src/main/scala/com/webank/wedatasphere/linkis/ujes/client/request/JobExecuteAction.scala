@@ -36,6 +36,7 @@ class JobExecuteAction private() extends POSTAction with UJESJobAction {
   override def suffixURLs: Array[String] = Array("entrance", "execute")
   override def getRequestPayload: String = DWSHttpClient.jacksonJson.writeValueAsString(getRequestPayloads)
 }
+
 object JobExecuteAction {
   def builder(): Builder = new Builder
   class Builder private[JobExecuteAction]() {

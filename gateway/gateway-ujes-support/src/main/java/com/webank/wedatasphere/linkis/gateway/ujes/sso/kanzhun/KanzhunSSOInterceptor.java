@@ -6,17 +6,19 @@ import java.net.URLEncoder;
 import javax.servlet.http.Cookie;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.webank.wedatasphere.linkis.common.utils.JavaLog;
 import com.webank.wedatasphere.linkis.gateway.http.GatewayContext;
 import com.webank.wedatasphere.linkis.gateway.security.sso.SSOInterceptor;
 import com.webank.wedatasphere.linkis.gateway.springcloud.http.SpringCloudGatewayHttpResponse;
-
 import cn.techwolf.boss.internaluc.model.dubbo.UcUserInfo;
 import cn.techwolf.boss.internaluc.service.dubbo.UcPassportDubboService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.webank.wedatasphere.linkis.DataWorkCloudApplication;
+import com.webank.wedatasphere.linkis.DataWorkCloudApplication;
+import com.webank.wedatasphere.linkis.common.utils.ClassUtils;
+import com.webank.wedatasphere.linkis.gateway.config.GatewayConfiguration;
+import com.webank.wedatasphere.linkis.gateway.http.GatewayContext;
 
 @Component
 class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
@@ -27,9 +29,10 @@ class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
 
 	private String passportUrl = "http://innerauth.weizhipin.com/iuc/user/login";
 
+ 
 	@Autowired
 	private UcPassportDubboService ucPassportDubboService;
-
+	
 	@Override
 	public String getUser(GatewayContext gatewayContext) {
 		if(null==gatewayContext.getRequest().getCookies().get("t_datastar")) {
@@ -38,13 +41,13 @@ class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
 			return null;
 		}
 		String ticket = gatewayContext.getRequest().getCookies().get("t_datastar")[0].getValue();
-		info("t_datastar:"+gatewayContext.getRequest().getCookies().get("t_datastar")[0].getValue());
+		info("t_datastar:"+ticket);
  		if (StringUtils.isBlank(ticket)) {
 			info("-------------未登陆---ticket is null------");
 			return null;
 		}
 		info("get user by ticket,ticket:"+ticket+ " systemToken:"+this.systemToken);
-		UcUserInfo user = this.ucPassportDubboService.getUserByTicket(ticket, this.systemToken);
+		UcUserInfo user = ucPassportDubboService.getUserByTicket(ticket, this.systemToken);
 		if (null != user) {
 			info("get user by ticket,user:"+user.toString());
 			return user.getEmail().split("@")[0];

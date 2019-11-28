@@ -22,7 +22,7 @@ package com.webank.bdp.dataworkcloud.ujes.client
 
 import java.util.concurrent.TimeUnit
 import com.webank.wedatasphere.linkis.common.utils.Utils
-import com.webank.wedatasphere.linkis.httpclient.dws.authentication.StaticAuthenticationStrategy
+import com.webank.wedatasphere.linkis.httpclient.dws.authentication.TokenAuthenticationStrategy
 import com.webank.wedatasphere.linkis.httpclient.dws.config.DWSClientConfigBuilder
 import com.webank.wedatasphere.linkis.ujes.client.UJESClient
 import com.webank.wedatasphere.linkis.ujes.client.request.JobExecuteAction.EngineType
@@ -41,13 +41,13 @@ object UJESClientHiveTestScala extends App {
     .discoveryFrequency(1, TimeUnit.MINUTES)
     .loadbalancerEnabled(true).maxConnectionSize(5)
     .retryEnabled(false).readTimeout(300000)
-    .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("zhuhui@kanzhun.com")
+    .setAuthenticationStrategy(new TokenAuthenticationStrategy()).setAuthTokenKey("zhuhui@kanzhun.com")
     .setAuthTokenValue("Liangqilang1989").setDWSVersion("v1").build()
   val client = UJESClient(clientConfig)
 
   val jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
     .addExecuteCode("select count(1) from dm_boss_dap_woody.base_person limit 10;")
-    .setEngineType(EngineType.HIVE).setUser("zhuhui@kanzhun.com").setUmUser("athena").build())
+    .setEngineType(EngineType.HIVE).setUser("athena").setUmUser("athena").build())
   println("execId: " + jobExecuteResult.getExecID + ", taskId: " + jobExecuteResult.taskID)
  
   var status = client.status(jobExecuteResult)
@@ -60,8 +60,10 @@ object UJESClientHiveTestScala extends App {
     status = client.status(jobExecuteResult)
   }
   val jobInfo = client.getJobInfo(jobExecuteResult)
+  
   val resultSet = jobInfo.getResultSetList(client).head
-  val fileContents = client.resultSet(ResultSetAction.builder().setPath(resultSet).setUser(jobExecuteResult.getUser).setUmUser("athena").build()).getFileContent
+  
+  val fileContents = client.resultSet(ResultSetAction.builder().setPath(resultSet).setPage(1).setPageSize(50).setUser(jobExecuteResult.getUser).setUmUser("athena").build()).getFileContent
   println("fileContents: " + fileContents)
   IOUtils.closeQuietly(client)
 }

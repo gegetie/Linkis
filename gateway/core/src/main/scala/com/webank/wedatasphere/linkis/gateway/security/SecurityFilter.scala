@@ -68,6 +68,7 @@ object SecurityFilter {
       }
     }
     val isPassAuthRequest = GatewayConfiguration.PASS_AUTH_REQUEST_URI.exists(gatewayContext.getRequest.getRequestURI.startsWith)
+    
     if(gatewayContext.getRequest.getRequestURI.startsWith(ServerConfiguration.BDP_SERVER_USER_URI.getValue)) {
       Utils.tryCatch(userRestful.doUserRequest(gatewayContext)){ t =>
         val message = t match {

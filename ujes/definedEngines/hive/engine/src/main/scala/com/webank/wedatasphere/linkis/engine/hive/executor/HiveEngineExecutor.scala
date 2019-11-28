@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
+import org.apache.commons.lang.exception.ExceptionUtils
 
 /**
   * created by cooperyang on 2018/11/22
@@ -157,7 +158,6 @@ class HiveEngineExecutor(outputPrintLimit:Int,
                 //if (numberOfJobs != 0) engineExecutorContext.appendStdout(s"Your hive sql has $numberOfJobs MR jobs to do")
                 val hiveResponse:CommandProcessorResponse = driver.run(realCode)
                 if (hiveResponse.getResponseCode != 0) {
-                  LOG.error("Hive query failed, reason: ", hiveResponse.getException)
                   val errorException = HiveQueryFailedException(41004, "hive query failed:" + hiveResponse.getErrorMessage)
                   errorException.initCause(hiveResponse.getException)
                   throw errorException

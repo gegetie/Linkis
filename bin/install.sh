@@ -40,22 +40,22 @@ fi
 }
 
 function checkPythonAndJava(){
-	python --version
-	isSuccess "execute python --version"
-	java -version
-	isSuccess "execute java --version"
+  python --version
+  isSuccess "execute python --version"
+  java -version
+  isSuccess "execute java --version"
 }
 
 function checkHadoopAndHive(){
-	hdfs version
-	isSuccess "execute hdfs version"
-	hive --help
-	#isSuccess "execute hive -h"
+  hdfs version
+  isSuccess "execute hdfs version"
+  hive --help
+  #isSuccess "execute hive -h"
 }
 
 function checkSpark(){
-	spark-submit --version
-	isSuccess "execute spark-submit --version"
+  spark-submit --version
+  isSuccess "execute spark-submit --version"
 }
 
 say() {
@@ -138,24 +138,6 @@ else
   echo "no choice,exit!"
   exit 1
 fi
-
-
-echo "create hdfs  directory and local directory"
-if [ "$WORKSPACE_USER_ROOT_PATH" != "" ]
-then
-  localRootDir=$WORKSPACE_USER_ROOT_PATH
-  if [[ $WORKSPACE_USER_ROOT_PATH == file://* ]]
-  then
-    localRootDir=${WORKSPACE_USER_ROOT_PATH#file://}
-  fi
-  #mkdir $localRootDir/$deployUser
-fi
-isSuccess "create  local directory"
-if [ "$HDFS_USER_ROOT_PATH" != "" ]
-then
-  #hdfs dfs -mkdir $HDFS_USER_ROOT_PATH/$deployUser
-fi
-isSuccess "create  hdfs directory"
 
 ##stop server
 #echo "step2,stop server"
@@ -292,11 +274,11 @@ echo "<----------------$SERVERNAME:end------------------->"
 
 ##init db
 if [[ '2' = "$MYSQL_INSTALL_MODE" ]];then
-	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
-	isSuccess "source linkis_ddl.sql"
-	mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
-	isSuccess "source linkis_dml.sql"
-	echo "Rebuild the table"
+  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_ddl.sql"
+  isSuccess "source linkis_ddl.sql"
+  mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DB -e "source ${workDir}/db/linkis_dml.sql"
+  isSuccess "source linkis_dml.sql"
+  echo "Rebuild the table"
 fi
 
 
@@ -333,8 +315,8 @@ echo "<----------------$SERVERNAME:end------------------->"
 ##PythonEntrance install end
 
 if [[ '1' = "$INSTALL_MODE" ]];then
-	echo "Lite install end"
-	exit 0
+  echo "Lite install end"
+  exit 0
 fi
 
 ##linkis-metadata install
@@ -401,12 +383,12 @@ echo "<----------------$SERVERNAME:end------------------->"
 
 
 if [[ '2' = "$INSTALL_MODE" ]];then
-	echo "Simple install end"
-	exit 0
+  echo "Simple install end"
+  exit 0
 fi
 
 if [[ '3' != "$INSTALL_MODE" ]];then
-	exit 0
+  exit 0
 fi
 
 ##SparkEM install
@@ -458,3 +440,37 @@ ssh -p $SSH_PORT $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.
 isSuccess "subsitution linkis.properties of $SERVERNAME"
 echo "<----------------$SERVERNAME:end------------------->"
 ##SparkEntrance install end
+
+##ImpalaEM install
+PACKAGE_DIR=linkis/ujes/impala
+SERVERNAME=linkis-ujes-impala-enginemanager
+SERVER_IP=$IMPALA_INSTALL_IP
+SERVER_PORT=$IMPALA_EM_PORT
+SERVER_HOME=$LINKIS_INSTALL_HOME
+###install dir
+installPackage
+###update linkis.properties
+echo "$SERVERNAME-step4:update linkis conf"
+SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
+ENGINE_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis-engine.properties
+ssh -p $SSH_PORT $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.enginemanager.sudo.script.*#wds.linkis.enginemanager.sudo.script=$SERVER_HOME/$SERVERNAME/bin/rootScript.sh#g\" $SERVER_CONF_PATH"
+isSuccess "subsitution linkis.properties of $SERVERNAME"
+ssh -p $SSH_PORT $SERVER_IP "rm $SERVER_HOME/$SERVERNAME/lib/servlet-api-2.5.jar"
+echo "<----------------$SERVERNAME:end------------------->"
+##ImpalaEM install end
+
+
+##ImpalaEntrance install
+PACKAGE_DIR=linkis/ujes/impala
+SERVERNAME=linkis-ujes-impala-entrance
+SERVER_PORT=$IMPALA_ENTRANCE_PORT
+###install dir
+installPackage
+###update linkis.properties
+echo "$SERVERNAME-step4:update linkis conf"
+SERVER_CONF_PATH=$SERVER_HOME/$SERVERNAME/conf/linkis.properties
+ssh -p $SSH_PORT $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.entrance.config.logPath.*#wds.linkis.entrance.config.logPath=$WORKSPACE_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+ssh -p $SSH_PORT $SERVER_IP "sed -i ${txt}  \"s#wds.linkis.resultSet.store.path.*#wds.linkis.resultSet.store.path=$HDFS_USER_ROOT_PATH#g\" $SERVER_CONF_PATH"
+isSuccess "subsitution linkis.properties of $SERVERNAME"
+echo "<----------------$SERVERNAME:end------------------->"
+##impalaEntrance install end

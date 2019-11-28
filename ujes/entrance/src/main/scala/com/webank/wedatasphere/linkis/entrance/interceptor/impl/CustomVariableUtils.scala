@@ -76,7 +76,7 @@ object CustomVariableUtils extends Logging {
     val umUser:String = task.asInstanceOf[RequestPersistTask].getUmUser
     var codeType = SQL_TYPE
     runType match {
-      case "hql" | "sql" | "jdbc" | "hive" => codeType = SQL_TYPE
+      case "hql" | "sql"| "iql"  | "jdbc" | "hive" => codeType = SQL_TYPE
       case "python" => codeType = PY_TYPE
       case "java" => codeType = JAVA_TYPE
       case "scala" => codeType = SCALA_TYPE

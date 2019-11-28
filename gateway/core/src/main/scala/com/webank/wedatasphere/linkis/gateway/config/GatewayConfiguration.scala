@@ -22,11 +22,7 @@ import com.webank.wedatasphere.linkis.common.conf.CommonVars
   * created by cooperyang on 2019/5/22.
   */
 object GatewayConfiguration {
-
-  val ENABLE_PROXY_USER = CommonVars("wds.linkis.gateway.conf.enable.proxy.user", false)
-  val PROXY_USER_CONFIG = CommonVars("wds.linkis.gateway.conf.proxy.user.config", "/proxy.properties")
   val ADMIN_USER_CONFIG = CommonVars("wds.linkis.gateway.conf.admin.user.config", "/admin.properties")
-  val PROXY_USER_SCAN_INTERVAL = CommonVars("wds.linkis.gateway.conf.proxy.user.scan.interval", 1000 * 60 * 10)
   val ADMIN_USER_SCAN_INTERVAL = CommonVars("wds.linkis.gateway.conf.admin.user.scan.interval", 1000 * 60 * 10)
   val TOKEN_KEY = "Token-Code"
   val TOKEN_USER_KEY = "Token-User"

@@ -25,6 +25,39 @@
 			<groupId>com.webank.wedatasphere.linkis</groupId>
 			<artifactId>linkis-gateway-springcloudgateway</artifactId>
 			<version>${linkis.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.javassist</groupId>
+					<artifactId>javassist</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>cn.techwolf</groupId>
+			<artifactId>techwolf-boss-utils</artifactId>
+			<version>1.1.773</version>
+			<exclusions>
+				<exclusion>
+					<groupId>cn.techwolf</groupId>
+					<artifactId>techwolf-boss-security</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.microsoft.ews-java-api</groupId>
+					<artifactId>ews-java-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sina</groupId>
+					<artifactId>weibo4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jboss.netty</groupId>
+					<artifactId>netty</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>cn.techwolf</groupId>

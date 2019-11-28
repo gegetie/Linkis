@@ -92,6 +92,8 @@ abstract class FileErrorCodeManager extends ErrorCodeManager{
       ErrorCode("Caused by:\\s*java.io.FileNotFoundException".r.unanchored, "20003", "内存溢出，请：1、检查脚本查询中是否加了ds分区；2、增加内存配置；3、使用HQL执行（可能成功）"),
       ErrorCode("Permission denied:\\s*user=[a-zA-Z0-9_]+,\\s*access=[A-Z]+\\s*,\\s*inode=\"([a-zA-Z0-9/_\\.]+)\"".r.unanchored, "30001", "%s无权限访问，请申请开通数据表权限"),
       ErrorCode("Database '([a-zA-Z_0-9]+)' not found".r.unanchored, "40001", "数据库%s不存在，请检查引用的数据库是否有误"),
+      ErrorCode("Not enough aggregate memory available in pool (\\S+)".r.unanchored, "20003", "Session创建失败，队列%s资源不足，请稍后再试"),
+      ErrorCode("Rejected query from pool (\\S+): request memory needed (\\S+) GB is greater than pool max mem resources (\\S+) GB".r.unanchored, "20003", "Session创建失败，队列%s资源不足,当前申请资源%s，队列最大资源%s,请更换其他引擎或者联系管理员"),
       ErrorCode("Database does not exist: ([a-zA-Z_0-9]+)".r.unanchored, "40001", "数据库%s不存在，请检查引用的数据库是否有误"),
       ErrorCode("Table or view not found: ([`\\.a-zA-Z_0-9]+)".r.unanchored, "40002", "表%s不存在，请检查引用的表是否有误"),
       ErrorCode("Table not found '([a-zA-Z_0-9]+)'".r.unanchored, "40002", "表%s不存在，请检查引用的表是否有误"),

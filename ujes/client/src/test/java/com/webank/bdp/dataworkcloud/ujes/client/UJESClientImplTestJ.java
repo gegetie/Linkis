@@ -17,7 +17,8 @@
 package com.webank.bdp.dataworkcloud.ujes.client;
 
 import com.webank.wedatasphere.linkis.common.utils.Utils;
-import com.webank.wedatasphere.linkis.httpclient.dws.authentication.StaticAuthenticationStrategy;
+import com.webank.wedatasphere.linkis.httpclient.authentication.AuthenticationStrategy;
+import com.webank.wedatasphere.linkis.httpclient.dws.authentication.TokenAuthenticationStrategy;
 import com.webank.wedatasphere.linkis.httpclient.dws.config.DWSClientConfig;
 import com.webank.wedatasphere.linkis.httpclient.dws.config.DWSClientConfigBuilder;
 import com.webank.wedatasphere.linkis.ujes.client.UJESClient;
@@ -28,26 +29,31 @@ import com.webank.wedatasphere.linkis.ujes.client.response.JobExecuteResult;
 import com.webank.wedatasphere.linkis.ujes.client.response.JobInfoResult;
 import com.webank.wedatasphere.linkis.ujes.client.response.JobProgressResult;
 import com.webank.wedatasphere.linkis.ujes.client.response.JobStatusResult;
+import com.webank.wedatasphere.linkis.ujes.client.response.ResultSetResult;
+
 import org.apache.commons.io.IOUtils;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+ 
 
 public class UJESClientImplTestJ{
 	//http://datanode-03:9001/api/rest_j/v1/gateway/heartbeat
+	
     public static void main(String[] args){
         DWSClientConfig clientConfig = ((DWSClientConfigBuilder) (DWSClientConfigBuilder.newBuilder().addUJESServerUrl("http://datanode-03:9001")
-                .connectionTimeout(30000).discoveryEnabled(true)
+                .connectionTimeout(30000).discoveryEnabled(false)
                 .discoveryFrequency(1, TimeUnit.MINUTES)
                 .loadbalancerEnabled(true).maxConnectionSize(5)
                 .retryEnabled(false).readTimeout(30000)
-                .setAuthenticationStrategy(new StaticAuthenticationStrategy()).setAuthTokenKey("zhuhui@kanzhun.com")
-                .setAuthTokenValue("Liangqilang1989"))).setDWSVersion("v1").build();
+                .setAuthenticationStrategy(new TokenAuthenticationStrategy()).setAuthTokenKey("1111111")
+                .setAuthTokenValue("testtoken"))).setDWSVersion("v1").build();
+       
         UJESClient client = new UJESClientImpl(clientConfig);
-
+        
         JobExecuteResult jobExecuteResult = client.execute(JobExecuteAction.builder().setCreator("UJESClient-Test")
-                .addExecuteCode("show tables")
-                .setEngineType(JobExecuteAction.EngineType$.MODULE$.HIVE()).setUser("zhuhui@kanzhun.com").setUmUser("athena").build());
+                .addExecuteCode("select * from dm_boss_dap_woody.base_person limit 100;")
+                .setEngineType(JobExecuteAction.EngineType$.MODULE$.HIVE()).setUser("athena").setUmUser("athena").build());
         System.out.println("execId: " + jobExecuteResult.getExecID() + ", taskId: " + jobExecuteResult.taskID());
         JobStatusResult status = client.status(jobExecuteResult);
         while(!status.isCompleted()) {
@@ -55,10 +61,18 @@ public class UJESClientImplTestJ{
             Utils.sleepQuietly(500);
             status = client.status(jobExecuteResult);
         }
+         
         JobInfoResult jobInfo = client.getJobInfo(jobExecuteResult);
+        
         String resultSet = jobInfo.getResultSetList(client)[0];
-        Object fileContents = client.resultSet(ResultSetAction.builder().setPath(resultSet).setUser(jobExecuteResult.getUser()).build()).getFileContent();
-        System.out.println("fileContents: " + fileContents);
+        System.out.println("数据hdfs结果集路径：resultSet: " + resultSet);
+        ResultSetResult resultSetResult  = client.resultSet(ResultSetAction.builder().setPath(resultSet).setPageSize(1).setUser("athena").setUmUser("athena").build());        
+        List<String> metaData = (List<String>) resultSetResult.getMetadata();
+        System.out.println("数据表头：metaData: " + metaData.toString());
+        Object fileContents = resultSetResult.getFileContent();
+        System.out.println("数据内容：fileContents: " + fileContents);
         IOUtils.closeQuietly(client);
     }
+    
+
 }

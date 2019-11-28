@@ -25,41 +25,18 @@ import org.apache.commons.lang.StringUtils
 
 object ConfigUserUtils extends Logging {
 
-  private val proxyProps = new Properties
   private val adminProps = new Properties
   
-   Utils.defaultScheduler.scheduleAtFixedRate(new Runnable {
+  Utils.defaultScheduler.scheduleAtFixedRate(new Runnable {
       override def run(): Unit = {
-        info("loading admin users.")
         val newProps = new Properties
         newProps.load(this.getClass.getResourceAsStream(ADMIN_USER_CONFIG.getValue))
         adminProps.clear()
         adminProps.putAll(newProps)
       }
     }, 0, ADMIN_USER_SCAN_INTERVAL.getValue, TimeUnit.MILLISECONDS)
-    
-  if(ENABLE_PROXY_USER.getValue){
-    Utils.defaultScheduler.scheduleAtFixedRate(new Runnable {
-      override def run(): Unit = {
-        info("loading proxy users.")
-        val newProps = new Properties
-        newProps.load(this.getClass.getResourceAsStream(PROXY_USER_CONFIG.getValue))
-        proxyProps.clear()
-        proxyProps.putAll(newProps)
-      }
-    }, 0, PROXY_USER_SCAN_INTERVAL.getValue, TimeUnit.MILLISECONDS)
-  }
   
    def getAdminUser(adminUser: String): String =  {
     return adminProps.getProperty(adminUser)
   }  
-
-  def getProxyUser(umUser: String): String = if(ENABLE_PROXY_USER.getValue) {
-    val proxyUser = proxyProps.getProperty(umUser)
-    if(StringUtils.isBlank(proxyUser)) umUser else {
-      info(s"switched to proxy user $proxyUser for umUser $umUser.")
-      proxyUser
-    }
-  } else umUser
-
 }

@@ -1,4 +1,4 @@
-SSH_PORT=13122
+SSH_PORT=22
 
 ### deploy user
 deployUser=hadoop
@@ -78,18 +78,22 @@ PYTHON_EM_PORT=12001
 PYTHON_ENTRANCE_PORT=12002
 
 
+### Impala
+### This service is used to provide impala capability.
+IMPALA_INSTALL_IP=127.0.0.1
+IMPALA_EM_PORT=13001
+IMPALA_ENTRANCE_PORT=13002
+
+
 ### JDBC
 ### This service is used to provide jdbc capability.
 JDBC_INSTALL_IP=127.0.0.1
 JDBC_ENTRANCE_PORT=9888
 
-
-
 ########################################################################################
-
-## LDAP is for enterprise authorization, if you just want to have a try, ignore it.
-#LDAP_URL=ldap://localhost:1389/
-#LDAP_BASEDN=dc=webank,dc=com
-
+#LDAP_URL=ldap://ldap-inc.weizhipin.com/
+LDAP_URL=ldap://192.168.1.15/
+LDAP_BASEDN=ou=people,dc=kanzhun,dc=org
 
 LINKIS_VERSION=0.9.0
+

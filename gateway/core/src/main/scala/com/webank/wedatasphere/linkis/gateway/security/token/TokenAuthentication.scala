@@ -56,6 +56,7 @@ object TokenAuthentication extends Logging {
 
   private def validateTokenUser(token: String, tokenUser: String): Boolean = {
     val tokenUsers = props.getProperty(token)
+    info(s"validate TokenUser, token: ${token}, tokenUser: ${tokenUser}, tokenUsers: ${tokenUsers}.")
     if(tokenUsers == "*" || (StringUtils.isNotBlank(tokenUsers) && tokenUsers.contains(tokenUser))) true
     else false
   }

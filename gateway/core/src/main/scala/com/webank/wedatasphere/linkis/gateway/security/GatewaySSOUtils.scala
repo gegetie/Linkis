@@ -43,12 +43,10 @@ object GatewaySSOUtils extends Logging {
   def getLoginUsername(gatewayContext: GatewayContext): String = SSOUtils.getLoginUsername(getCookies(gatewayContext))
   
   def setLoginUser(gatewayContext: GatewayContext, username: String): Unit = {
-    val proxyUser = ConfigUserUtils.getProxyUser(username)
-    SSOUtils.setLoginUser(c => gatewayContext.getResponse.addCookie(c), proxyUser)
+    SSOUtils.setLoginUser(c => gatewayContext.getResponse.addCookie(c), username)
   }
   def setLoginUser(request: GatewayHttpRequest, username: String): Unit = {
-    val proxyUser = ConfigUserUtils.getProxyUser(username)
-    SSOUtils.setLoginUser(c => request.addCookie(c.getName, Array(c)), proxyUser)
+    SSOUtils.setLoginUser(c => request.addCookie(c.getName, Array(c)), username)
   }
   def removeLoginUser(gatewayContext: GatewayContext): Unit = {
     SSOUtils.removeLoginUser(gatewayContext.getRequest.getCookies.flatMap(_._2).toArray)

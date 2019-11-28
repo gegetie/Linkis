@@ -29,7 +29,7 @@
     <artifactId>linkis-ujes-client</artifactId>
 
 	<properties>
-        <linkis.version>0.8.0</linkis.version>
+        <linkis.version>0.9.0</linkis.version>
     </properties>
     
     <dependencies>
