@@ -32,7 +32,7 @@ import scala.collection.JavaConversions._
   */
 object DWSHttpMessageFactory {
 
-  private val reflections = new Reflections("com.webank.wedatasphere", classOf[DWSHttpMessageResult].getClassLoader)
+  private val reflections = new Reflections("cn.techwolf.dap", classOf[DWSHttpMessageResult].getClassLoader)
 
   private val methodToHttpMessageClasses = reflections.getTypesAnnotatedWith(classOf[DWSHttpMessageResult])
     .filter(ClassUtils.isAssignable(_, classOf[Result])).map { c =>
@@ -44,6 +44,7 @@ object DWSHttpMessageFactory {
   def getDWSHttpMessageResult(method: String): Option[DWSHttpMessageResultInfo] = methodToHttpMessageClasses.get(method).orElse {
     methodRegex.find(method.matches).map(methodToHttpMessageClasses.apply)
   }
-
+ 
 }
 case class DWSHttpMessageResultInfo(method: String, clazz: Class[_])
+

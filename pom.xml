@@ -44,17 +44,6 @@
         <tag>HEAD</tag>
     </scm>
 
-    <developers>
-        <developer>
-            <id>peace</id>
-            <name>peace wong</name>
-            <email>wpeace1212@gmail.com</email>
-            <url>http://blog.wpeace.cn/</url>
-            <organization>WeBankFinTech</organization>
-            <organizationUrl>https://github.com/WeBankFinTech</organizationUrl>
-        </developer>
-    </developers>
-
     <modules>
 
         <module>core/common</module>
@@ -298,21 +287,23 @@
 
     </profiles>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
+ <distributionManagement>
         <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>nexus-releases</id>
+            <name>Internal Release Repository</name>
+            <url>http://m2.kanzhun-inc.com/nexus/content/repositories/releases/</url>
         </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <name>Internal Snapshot Repository</name>
+            <url>http://m2.kanzhun-inc.com/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
+
 
     <build>
         <pluginManagement>
+        
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -26,7 +26,6 @@
         <artifactId>linkis</artifactId>
     </parent>
 
-
     <packaging>jar</packaging>
     <artifactId>linkis-storage</artifactId>
 
