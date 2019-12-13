@@ -47,6 +47,7 @@ import com.webank.wedatasphere.linkis.storage.resultset.table.TableRecord;
 import com.webank.wedatasphere.linkis.storage.script.*;
 import com.webank.wedatasphere.linkis.storage.utils.StorageUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.*;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.codehaus.jackson.JsonNode;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -318,6 +319,7 @@ public class FsRestfulApi implements FsRestfulRemote {
             String charset = json.get("charset");
             String userName = SecurityFilter.getLoginUsername(req);
             String path = json.get("path");
+            LOGGER.info("download:"+userName+",path:"+path);
             if (StringUtils.isEmpty(path)) {
                 throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
             }
@@ -336,7 +338,14 @@ public class FsRestfulApi implements FsRestfulRemote {
             int bytesRead = 0;
             response.setCharacterEncoding(charset);
             java.nio.file.Path source = Paths.get(fsPath.getPath());
-            response.addHeader("Content-Type", Files.probeContentType(source));
+            
+            String contentType = Files.probeContentType(source);
+            
+            if(!StringUtils.isEmpty(contentType)) {
+            		response.addHeader("Content-Type", contentType);
+            } else {
+            		response.addHeader("Content-Type", "multipart/form-data");
+            }
             response.addHeader("Content-Disposition", "attachment;filename="
                     + new File(fsPath.getPath()).getName());
             outputStream = response.getOutputStream();
@@ -358,6 +367,88 @@ public class FsRestfulApi implements FsRestfulRemote {
             StorageUtils.close(outputStream, inputStream, null);
         }
     }
+    
+    /**
+     * @param req
+     * @param response
+     * @param json
+     * @throws IOException
+     */
+    @POST
+    @Path("/resultdownload")
+    @Override
+    public void resultDownload(@Context HttpServletRequest req,
+                         @Context HttpServletResponse response,
+                         @RequestBody Map<String, String> json) throws IOException, WorkSpaceException {
+        FileSystem fileSystem = null;
+        InputStream inputStream = null;
+        ServletOutputStream outputStream = null;
+        com.webank.wedatasphere.linkis.common.io.resultset.ResultSetReader<? extends MetaData, ? extends Record> resultSetReader = null;
+        try {
+            String charset = json.get("charset");
+            String userName = SecurityFilter.getLoginUsername(req);
+            String path = json.get("path");
+            LOGGER.info("download:"+userName+",path:"+path);
+            if (StringUtils.isEmpty(path)) {
+                throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
+            }
+            if (StringUtils.isEmpty(charset)) {
+                charset = "utf-8";
+            }
+            FsPath fsPath = new FsPath(path);
+            //// TODO: 2018/11/29 Judging the directory, the directory cannot be downloaded(判断目录,目录不能下载)
+            fileSystem = fsService.getFileSystem(userName, fsPath);
+            fsValidate(fileSystem);
+            if (!fileSystem.exists(fsPath)) {
+                throw new WorkSpaceException("The downloaded directory does not exist!(下载的目录不存在!)");
+            }
+            ResultSetFactory instance = ResultSetFactory$.MODULE$.getInstance();
+            ResultSet<? extends MetaData, ? extends Record> resultSet = instance.getResultSetByPath(fsPath);
+            resultSetReader = ResultSetReader.getResultSetReader(resultSet, fileSystem.read(fsPath));
+            MetaData metaData = resultSetReader.getMetaData();
+            List<String> resultsetMetaDataList = new ArrayList<>();
+            TableMetaData tableMetaData = (TableMetaData) metaData;
+            Column[] columns = tableMetaData.columns();
+            for (Column column : columns) {
+                resultsetMetaDataList.add(column.toString());
+            }
+            ArrayList<String> resulstsetColumn = new ArrayList<>();
+            outputStream = response.getOutputStream();
+            response.setCharacterEncoding(charset);
+            response.addHeader("Content-Type", "multipart/form-data");
+            //response.addHeader("Content-Disposition", "attachment;filename="+ path.getName());
+            while (resultSetReader.hasNext()) {
+                Record record = resultSetReader.getRecord();
+                TableRecord tableRecord = (TableRecord) record;
+                
+                Object[] row = tableRecord.row();
+                for (Object o : row) {
+                    resulstsetColumn.add(o == null ? "NULL" : o.toString());
+                }
+                String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
+                outputStream.write(rs.getBytes("utf-8"));
+                outputStream.write("\r\n".getBytes());
+                resulstsetColumn.clear();
+            } 
+            LOGGER.info("success to read file:"+path);
+        } catch (Exception e) {
+        	  	LOGGER.error("output fail", e);
+            response.reset();
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("text/plain; charset=utf-8");
+            PrintWriter writer = response.getWriter();
+            writer.append("error(错误):" + e.getMessage());
+            writer.flush();
+            writer.close();
+        } finally {
+        		resultSetReader.close();
+            if (outputStream != null) {
+                outputStream.flush();
+            }
+            StorageUtils.close(outputStream, inputStream, null);
+        }
+    }
+    
 
     @GET
     @Path("/isExist")

@@ -31,6 +31,7 @@ import com.webank.wedatasphere.linkis.httpclient.exception.HttpMessageParseExcep
 import com.webank.wedatasphere.linkis.httpclient.loadbalancer.{AbstractLoadBalancer, DefaultLoadbalancerStrategy, LoadBalancer}
 import com.webank.wedatasphere.linkis.httpclient.request._
 import com.webank.wedatasphere.linkis.httpclient.response._
+import com.webank.wedatasphere.linkis.httpclient.exception.HttpClientResultException
 import dispatch._
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
@@ -201,6 +202,12 @@ abstract class AbstractHttpClient(clientConfig: ClientConfig, clientName: String
   protected def responseToResult(response: Response, requestAction: Action): Result = {
     val result = requestAction match {
       case download: DownloadAction =>
+        val statusCode = response.getStatusCode
+        if(statusCode != 200) {
+           val responseBody = response.getResponseBody
+           val url = response.getUri.toString
+           throw new HttpClientResultException(s"URL $url request failed! ResponseBody is $responseBody." )
+        }
         download.write(response.getResponseBodyAsStream)
         Result()
       case heartbeat: HeartbeatAction =>
