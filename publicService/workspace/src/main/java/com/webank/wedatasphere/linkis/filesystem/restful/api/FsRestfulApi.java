@@ -340,11 +340,10 @@ public class FsRestfulApi implements FsRestfulRemote {
             java.nio.file.Path source = Paths.get(fsPath.getPath());
             
             String contentType = Files.probeContentType(source);
-            
             if(!StringUtils.isEmpty(contentType)) {
-            		response.addHeader("Content-Type", contentType);
+              response.addHeader("Content-Type", contentType);
             } else {
-            		response.addHeader("Content-Type", "multipart/form-data");
+            	  response.addHeader("Content-Type", "multipart/form-data");
             }
             response.addHeader("Content-Disposition", "attachment;filename="
                     + new File(fsPath.getPath()).getName());
@@ -388,15 +387,14 @@ public class FsRestfulApi implements FsRestfulRemote {
             String charset = json.get("charset");
             String userName = SecurityFilter.getLoginUsername(req);
             String path = json.get("path");
-            LOGGER.info("download:"+userName+",path:"+path);
             if (StringUtils.isEmpty(path)) {
                 throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
             }
             if (StringUtils.isEmpty(charset)) {
                 charset = "utf-8";
             }
+            LOGGER.info("resultdownload:"+userName+",path:"+path);
             FsPath fsPath = new FsPath(path);
-            //// TODO: 2018/11/29 Judging the directory, the directory cannot be downloaded(判断目录,目录不能下载)
             fileSystem = fsService.getFileSystem(userName, fsPath);
             fsValidate(fileSystem);
             if (!fileSystem.exists(fsPath)) {
@@ -406,31 +404,33 @@ public class FsRestfulApi implements FsRestfulRemote {
             ResultSet<? extends MetaData, ? extends Record> resultSet = instance.getResultSetByPath(fsPath);
             resultSetReader = ResultSetReader.getResultSetReader(resultSet, fileSystem.read(fsPath));
             MetaData metaData = resultSetReader.getMetaData();
-            List<String> resultsetMetaDataList = new ArrayList<>();
-            TableMetaData tableMetaData = (TableMetaData) metaData;
-            Column[] columns = tableMetaData.columns();
-            for (Column column : columns) {
-                resultsetMetaDataList.add(column.toString());
-            }
-            ArrayList<String> resulstsetColumn = new ArrayList<>();
             outputStream = response.getOutputStream();
             response.setCharacterEncoding(charset);
             response.addHeader("Content-Type", "multipart/form-data");
-            //response.addHeader("Content-Disposition", "attachment;filename="+ path.getName());
-            while (resultSetReader.hasNext()) {
-                Record record = resultSetReader.getRecord();
-                TableRecord tableRecord = (TableRecord) record;
-                
-                Object[] row = tableRecord.row();
-                for (Object o : row) {
-                    resulstsetColumn.add(o == null ? "NULL" : o.toString());
-                }
-                String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
-                outputStream.write(rs.getBytes("utf-8"));
-                outputStream.write("\r\n".getBytes());
-                resulstsetColumn.clear();
-            } 
-            LOGGER.info("success to read file:"+path);
+            if (metaData instanceof TableMetaData) {
+	            ArrayList<String> resulstsetColumn = new ArrayList<>();
+	            while (resultSetReader.hasNext()) {
+	                Record record = resultSetReader.getRecord();
+	                TableRecord tableRecord = (TableRecord) record;
+	                Object[] row = tableRecord.row();
+	                for (Object o : row) {
+	                    resulstsetColumn.add(o == null ? "NULL" : o.toString());
+	                }
+	                //字段之间tab分割
+	                String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
+	                outputStream.write(rs.getBytes("utf-8"));
+	                outputStream.write(System.getProperty("line.separator").getBytes());  									 
+	                resulstsetColumn.clear();
+	            } 
+            }
+            if (metaData instanceof LineMetaData) {
+            		 while (resultSetReader.hasNext()) {
+                    Record record = resultSetReader.getRecord();
+                    LineRecord lineRecord = (LineRecord) record;
+    	                outputStream.write(lineRecord.getLine().getBytes("utf-8"));
+    	    	            outputStream.write(System.getProperty("line.separator").getBytes());  									 
+                 } 
+            }
         } catch (Exception e) {
         	  	LOGGER.error("output fail", e);
             response.reset();
