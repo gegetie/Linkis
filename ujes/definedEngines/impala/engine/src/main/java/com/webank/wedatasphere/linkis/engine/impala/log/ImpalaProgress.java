@@ -20,7 +20,7 @@ package com.webank.wedatasphere.linkis.engine.impala.log;
  * 
  * @Author liangqilang
  * @Mail zhuhui@kanzhun.com
- * @Desctiption 
+ * @Desctiption
  * @Date 2019-11-01
  */
 public class ImpalaProgress {
