@@ -21,7 +21,7 @@
     <artifactId>linkis-impala-engine</artifactId>
 
     <properties>
-        <hive.version>1.1.0-cdh5.9.2</hive.version>
+        <hive.version>1.2.1</hive.version>
     </properties>
 
     <dependencies>
