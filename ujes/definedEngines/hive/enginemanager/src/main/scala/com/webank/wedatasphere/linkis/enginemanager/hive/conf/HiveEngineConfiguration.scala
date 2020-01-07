@@ -24,7 +24,7 @@ import com.webank.wedatasphere.linkis.common.conf.{ByteType, CommonVars}
   */
 object HiveEngineConfiguration {
 
-    val HIVE_CLIENT_MEMORY = CommonVars("hive.client.memory", new ByteType("2g"), "Specify the memory size of the hiveCli client(指定hiveCli客户端的内存大小)")
+    val HIVE_CLIENT_MEMORY = CommonVars("hive.client.memory", new ByteType("1g"), "Specify the memory size of the hiveCli client(指定hiveCli客户端的内存大小)")
     val HIVE_CLIENT_OPTS = CommonVars("hive.client.java.opts", "-server -XX:+UseG1GC -XX:MaxPermSize=250m -XX:PermSize=128m " +
       "-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps",
       "Specify the option parameter of the HiveCli process (please modify it carefully!!!)(指定HiveCli进程的option参数（请谨慎修改！！！）)")

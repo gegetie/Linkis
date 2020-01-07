@@ -383,6 +383,8 @@ public class FsRestfulApi implements FsRestfulRemote {
         InputStream inputStream = null;
         ServletOutputStream outputStream = null;
         com.webank.wedatasphere.linkis.common.io.resultset.ResultSetReader<? extends MetaData, ? extends Record> resultSetReader = null;
+        StringBuilder datacacheBuilder = new StringBuilder();
+        long cacheSize = 10000;
         try {
             String charset = json.get("charset");
             String userName = SecurityFilter.getLoginUsername(req);
@@ -400,6 +402,8 @@ public class FsRestfulApi implements FsRestfulRemote {
             if (!fileSystem.exists(fsPath)) {
                 throw new WorkSpaceException("The downloaded directory does not exist!(下载的目录不存在!)");
             }
+            long startTime = System.currentTimeMillis();
+            long records=0;
             ResultSetFactory instance = ResultSetFactory$.MODULE$.getInstance();
             ResultSet<? extends MetaData, ? extends Record> resultSet = instance.getResultSetByPath(fsPath);
             resultSetReader = ResultSetReader.getResultSetReader(resultSet, fileSystem.read(fsPath));
@@ -407,9 +411,11 @@ public class FsRestfulApi implements FsRestfulRemote {
             outputStream = response.getOutputStream();
             response.setCharacterEncoding(charset);
             response.addHeader("Content-Type", "multipart/form-data");
+            response.setContentType("application/download");
             if (metaData instanceof TableMetaData) {
 	            ArrayList<String> resulstsetColumn = new ArrayList<>();
 	            while (resultSetReader.hasNext()) {
+	            		records++;
 	                Record record = resultSetReader.getRecord();
 	                TableRecord tableRecord = (TableRecord) record;
 	                Object[] row = tableRecord.row();
@@ -418,19 +424,27 @@ public class FsRestfulApi implements FsRestfulRemote {
 	                }
 	                //字段之间tab分割
 	                String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
-	                outputStream.write(rs.getBytes("utf-8"));
-	                outputStream.write(System.getProperty("line.separator").getBytes());  									 
+	                datacacheBuilder.append(rs);
+	                datacacheBuilder.append(System.getProperty("line.separator"));
 	                resulstsetColumn.clear();
+	                if(records%cacheSize==0) {
+	                		outputStream.write(datacacheBuilder.toString().getBytes()); 
+	                		outputStream.flush();
+	                		datacacheBuilder.setLength(0);
+	                		LOGGER.info("path "+ path + ",time taken: "+(System.currentTimeMillis() - startTime)/1000+" s, records "+records);
+	                }
 	            } 
             }
             if (metaData instanceof LineMetaData) {
             		 while (resultSetReader.hasNext()) {
+            			records++;
                     Record record = resultSetReader.getRecord();
                     LineRecord lineRecord = (LineRecord) record;
     	                outputStream.write(lineRecord.getLine().getBytes("utf-8"));
     	    	            outputStream.write(System.getProperty("line.separator").getBytes());  									 
                  } 
             }
+            LOGGER.info("path "+ path + ",time taken: "+(System.currentTimeMillis() - startTime)/1000+" s, records "+records);
         } catch (Exception e) {
         	  	LOGGER.error("output fail", e);
             response.reset();
@@ -443,6 +457,8 @@ public class FsRestfulApi implements FsRestfulRemote {
         } finally {
         		resultSetReader.close();
             if (outputStream != null) {
+        			outputStream.write(datacacheBuilder.toString().getBytes()); 
+        			datacacheBuilder.setLength(0);
                 outputStream.flush();
             }
             StorageUtils.close(outputStream, inputStream, null);

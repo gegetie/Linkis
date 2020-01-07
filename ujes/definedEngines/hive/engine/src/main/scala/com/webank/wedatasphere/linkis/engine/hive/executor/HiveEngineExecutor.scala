@@ -139,23 +139,9 @@ class HiveEngineExecutor(outputPrintLimit:Int,
             while(needRetry){
               needRetry = false
               driver.setTryCount(tryCount + 1)
-              val startTime = System.currentTimeMillis()
+              var startTime = System.currentTimeMillis()
               try{
-                //to get hive query plan
-                //val context = new Context(hiveConf)
-               // val parseDriver = new ParseDriver
-                //val tree = ParseUtils.findRootNonNullToken(parseDriver.parse(realCode, context))
-               // val sem = SemanticAnalyzerFactory.get(hiveConf, tree)
-                //sem.analyze(tree, context)
-                //sem.validate()
-               // val queryPlan = new QueryPlan(realCode, sem, 0L, null, org.apache.hadoop.hive.ql.plan.HiveOperation.QUERY,driver.getSchema)
-               // val numberOfJobs = Utilities.getMRTasks(queryPlan.getRootTasks).size
                 numberOfMRJobs = 1
-                //queryPlan.getRootTasks foreach {task =>
-                //  LOG.info(s"MR job jobID ${task.getJobID} and job is ${task.getMapWork.size()}")
-                //}
-                //LOG.info(s"$realCode has $numberOfJobs MR jobs to do")
-                //if (numberOfJobs != 0) engineExecutorContext.appendStdout(s"Your hive sql has $numberOfJobs MR jobs to do")
                 val hiveResponse:CommandProcessorResponse = driver.run(realCode)
                 if (hiveResponse.getResponseCode != 0) {
                   val errorException = HiveQueryFailedException(41004, "hive query failed:" + hiveResponse.getErrorMessage)
@@ -185,6 +171,8 @@ class HiveEngineExecutor(outputPrintLimit:Int,
                 val resultSetWriter = engineExecutorContext.createResultSetWriter(ResultSetFactory.TABLE_TYPE)
                 resultSetWriter.addMetaData(metaData)
                 val result = new util.ArrayList[String]()
+                //读取结果集计数
+                startTime = System.currentTimeMillis()
                 while(driver.getResults(result)){
                   val scalaResult:scala.collection.mutable.Buffer[String] = result
                   scalaResult foreach { s =>
@@ -198,9 +186,14 @@ class HiveEngineExecutor(outputPrintLimit:Int,
                   rows += result.size
                   result.clear()
                 }
+                engineExecutorContext.appendStdout(s"fetch Results Time taken: ${HiveUtils.msDurationToString(System.currentTimeMillis() - startTime)}, begin to write results.")
+                LOG.info(s"$getName >> fetch Results Time taken: ${HiveUtils.msDurationToString(System.currentTimeMillis() - startTime)}, begin to write results.")
+                startTime = System.currentTimeMillis()
                 columnCount = if (fieldSchemas != null) fieldSchemas.size() else 0
                 engineExecutorContext.sendResultSet(resultSetWriter)
                 IOUtils.closeQuietly(resultSetWriter)
+                engineExecutorContext.appendStdout(s"write results Time taken: ${HiveUtils.msDurationToString(System.currentTimeMillis() - startTime)}.")
+                LOG.info(s"$getName >> write results Time taken: ${HiveUtils.msDurationToString(System.currentTimeMillis() - startTime)}.")
               }catch{
                 case e:CommandNeedRetryException =>  tryCount += 1
                   needRetry = true

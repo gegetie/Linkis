@@ -30,6 +30,7 @@ object EngineConfiguration {
   val ENGINE_MAX_CONSUMER_QUEUE_SIZE = CommonVars("wds.linkis.engine.consumer.queue.max", new Integer(200))
 
   val ENGINE_RESULT_SET_MAX_CACHE = CommonVars("wds.linkis.engine.resultSet.cache.max", new ByteType("0k"))
+  val ENGINE_RESULT_SET_FS_MAX_CACHE = CommonVars("wds.linkis.engine.resultSet.fs.cache.max", new ByteType("1024k"))
   val ENGINE_RESULT_SET_STORE_PATH = CommonVars("wds.linkis.engine.resultSet.default.store.path", "hdfs:///tmp")
 
   val ENGINE_MAX_FREE_TIME = CommonVars("wds.linkis.engine.max.free.time", new TimeType("1h"))
