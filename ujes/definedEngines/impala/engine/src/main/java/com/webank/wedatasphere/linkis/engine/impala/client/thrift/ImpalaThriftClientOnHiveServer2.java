@@ -318,18 +318,20 @@ public class ImpalaThriftClientOnHiveServer2 extends TimerTask implements Impala
             while (true) {
                 Thread.sleep(heartBeatsInMilliSecond);
                 summary = getExecSummary(handler);
-                if (summary == null || !summary.getStatus().isActive()) {
+                
+                if (summary == null) {
+                    throw SubmitException.of(ExceptionCode.CommunicateError);
+                }
+                else if (!summary.getStatus().isActive()) {
                     break;
                 }
+                
                 if (resultListener != null) {
                     resultListener.progress(summary.getProgress());
                 }
-                throw new InterruptedException();
             }
 
-            if (summary == null) {
-                throw SubmitException.of(ExceptionCode.CommunicateError);
-            }
+            
 
             if (summary.getStatus().hasError()) {
                 if (resultListener != null) {
