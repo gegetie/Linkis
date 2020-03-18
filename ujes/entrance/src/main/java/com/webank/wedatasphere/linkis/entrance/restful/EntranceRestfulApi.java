@@ -81,10 +81,10 @@ public class EntranceRestfulApi implements EntranceRestfulRemote {
 //        try{
             logger.info("Begin to get an execID");
             logger.info("Begin to get an execID,json params:" + json);
-	    		if (null == json.get(TaskConstant.UMUSER)) {
-	    			json.put(TaskConstant.UMUSER, SecurityFilter.getLoginUsername(req));
-	    		}
-	    		json.put(TaskConstant.LOGINUSER, SecurityFilter.getLoginUsername(req));
+            if (null == json.get(TaskConstant.UMUSER)) {
+    			json.put(TaskConstant.UMUSER, SecurityFilter.getLoginUsername(req));
+    		}
+    		json.put(TaskConstant.LOGINUSER, SecurityFilter.getLoginUsername(req));
             String execID = entranceServer.execute(json);
             Job job = entranceServer.getJob(execID).get();
             Task task = ((EntranceJob)job).getTask();

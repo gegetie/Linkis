@@ -16,18 +16,14 @@
 
 package com.webank.wedatasphere.linkis.filesystem.util;
 
+import com.webank.wedatasphere.linkis.filesystem.conf.WorkSpaceConfiguration;
 import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
-import org.apache.hadoop.conf.Configuration;
+import com.webank.wedatasphere.linkis.storage.utils.StorageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -53,11 +49,14 @@ public class WorkspaceUtil {
                 || path.endsWith(".python")
                 || path.endsWith(".log")
                 || path.endsWith(".r")
-                || path.endsWith(".implql")
                 || path.endsWith(".iql")
                 || path.endsWith(".out")
                 || path.endsWith(".scala")
-                || path.endsWith(".py")) {
+                || path.endsWith(".py")
+                || path.endsWith(".mlsql")
+                || path.endsWith(".jdbc")
+                || path.endsWith(".sh")
+        ) {
             return "script";
         } else if (path.endsWith(".dolphin")) {
             return "resultset";
@@ -69,4 +68,46 @@ public class WorkspaceUtil {
     public static Boolean logMatch(String code ,String pattern){
         return Pattern.matches(pattern,code);
     }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkspaceUtil.class);
+
+    //TODO update pathSafeCheck rule
+    public static void pathSafeCheck(String path,String userName) throws WorkSpaceException {
+        /*LOGGER.info("start safe check path params..");
+        LOGGER.info(path);
+        String userLocalRootPath = null;
+        if (WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue().toString().endsWith(File.separator)){
+            userLocalRootPath = WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue() + userName;
+        }else{
+            userLocalRootPath = WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue() + File.separator + userName;
+        }
+        String userHdfsRootPath = null;
+        if (WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString().endsWith(File.separator)){
+            userHdfsRootPath = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
+        }else{
+            userHdfsRootPath = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + File.separator + userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
+        }
+        LOGGER.info(userLocalRootPath);
+        LOGGER.info(userHdfsRootPath);
+        if(!path.contains(StorageUtils.FILE_SCHEMA()) && !path.contains(StorageUtils.HDFS_SCHEMA())){
+            throw new WorkSpaceException("the path should contain schema");
+        }
+        if(path.contains("../")){
+            throw new WorkSpaceException("Relative path not allowed");
+        }
+        if(!path.contains(userLocalRootPath) && !path.contains(userHdfsRootPath)){
+            throw new WorkSpaceException("The path needs to be within the user's own workspace path");
+        }*/
+    }
+
+    public static void fileAndDirNameSpecialCharCheck(String path) throws WorkSpaceException {
+        String name = new File(path).getName();
+        LOGGER.info(path);
+        String specialRegEx = "[ _`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\n|\r|\t";
+        Pattern specialPattern = Pattern.compile(specialRegEx);
+        if(specialPattern.matcher(name).find()){
+            throw new WorkSpaceException("the path exist special char");
+        }
+    }
+
 }

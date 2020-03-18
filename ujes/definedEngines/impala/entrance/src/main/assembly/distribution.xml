@@ -52,7 +52,7 @@
                 <exclude>org.apache.hadoop:*</exclude>
                 <exclude>io.netty:netty*</exclude>
             </excludes>-->
-            <excludes>
+            <!--<excludes>
                 <exclude>antlr:antlr:jar</exclude>
                 <exclude>aopalliance:aopalliance:jar</exclude>
                 <exclude>asm:asm:jar</exclude>
@@ -127,7 +127,7 @@
                 <exclude>commons-net:commons-net:jar</exclude>
                 <exclude>commons-pool:commons-pool:jar</exclude>
                 <exclude>io.micrometer:micrometer-core:jar</exclude>
-                <!-- <exclude>io.netty:netty:jar</exclude>
+                <exclude>io.netty:netty:jar</exclude>
                 <exclude>io.netty:netty-all:jar</exclude>
                 <exclude>io.netty:netty-buffer:jar</exclude>
                 <exclude>io.netty:netty-codec:jar</exclude>
@@ -135,7 +135,7 @@
                 <exclude>io.netty:netty-common:jar</exclude>
                 <exclude>io.netty:netty-handler:jar</exclude>
                 <exclude>io.netty:netty-transport:jar</exclude>
-                <exclude>io.netty:netty-transport-native-epoll:jar</exclude> -->
+                <exclude>io.netty:netty-transport-native-epoll:jar</exclude>
                 <exclude>io.reactivex:rxjava:jar</exclude>
                 <exclude>io.reactivex:rxnetty:jar</exclude>
                 <exclude>io.reactivex:rxnetty-contexts:jar</exclude>
@@ -143,8 +143,8 @@
                 <exclude>javax.activation:activation:jar</exclude>
                 <exclude>javax.annotation:javax.annotation-api:jar</exclude>
                 <exclude>javax.inject:javax.inject:jar</exclude>
-                <!-- <exclude>javax.servlet:javax.servlet-api:jar</exclude>
-                <exclude>javax.servlet.jsp:jsp-api:jar</exclude> -->
+                <exclude>javax.servlet:javax.servlet-api:jar</exclude>
+                <exclude>javax.servlet.jsp:jsp-api:jar</exclude>
                 <exclude>javax.validation:validation-api:jar</exclude>
                 <exclude>javax.websocket:javax.websocket-api:jar</exclude>
                 <exclude>javax.ws.rs:javax.ws.rs-api:jar</exclude>
@@ -171,7 +171,7 @@
                 <exclude>org.apache.hadoop:hadoop-auth:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-common:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-hdfs:jar</exclude>
-                <!-- <exclude>org.apache.htrace:htrace-core:jar</exclude> -->
+                <exclude>org.apache.htrace:htrace-core:jar</exclude>
                 <exclude>org.apache.httpcomponents:httpclient:jar</exclude>
                 <exclude>org.apache.httpcomponents:httpcore:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-api:jar</exclude>
@@ -301,7 +301,7 @@
                 <exclude>xmlenc:xmlenc:jar</exclude>
                 <exclude>xmlpull:xmlpull:jar</exclude>
                 <exclude>xpp3:xpp3_min:jar</exclude>
-            </excludes>
+            </excludes>-->
         </dependencySet>
     </dependencySets>
 
@@ -313,6 +313,7 @@
             </includes>
             <fileMode>0777</fileMode>
             <outputDirectory>conf</outputDirectory>
+            <lineEnding>unix</lineEnding>
         </fileSet>
         <fileSet>
             <directory>${basedir}/bin</directory>
@@ -321,6 +322,7 @@
             </includes>
             <fileMode>0777</fileMode>
             <outputDirectory>bin</outputDirectory>
+            <lineEnding>unix</lineEnding>
         </fileSet>
         <fileSet>
             <directory>.</directory>

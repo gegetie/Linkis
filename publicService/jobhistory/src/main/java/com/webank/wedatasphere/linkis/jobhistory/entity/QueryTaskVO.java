@@ -25,8 +25,8 @@ public class QueryTaskVO {
     private Long taskID;
     private String instance;
     private String execId;
+    private String umUser;
     private String loginUser;
-	private String umUser;
     private String engineInstance;
     private String executionCode;
     private Float progress;
@@ -45,14 +45,14 @@ public class QueryTaskVO {
     private String paramsJson;
     private Long costTime;
     private String strongerExecId;
-    private String fileName;
+    private String sourceJson;
 
-    public String getFileName() {
-        return fileName;
+    public String getSourceJson() {
+        return sourceJson;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setSourceJson(String sourceJson) {
+        this.sourceJson = sourceJson;
     }
 
     public Long getTaskID() {
@@ -87,9 +87,6 @@ public class QueryTaskVO {
         this.umUser = umUser;
     }
 
-    public String getEngineInstance() {
-        return engineInstance;
-    }
     public String getLoginUser() {
   		return loginUser;
   	}
@@ -97,6 +94,11 @@ public class QueryTaskVO {
   	public void setLoginUser(String loginUser) {
   		this.loginUser = loginUser;
   	}
+  	
+    public String getEngineInstance() {
+        return engineInstance;
+    }
+
     public void setEngineInstance(String engineInstance) {
         this.engineInstance = engineInstance;
     }

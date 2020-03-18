@@ -27,7 +27,7 @@ case class NotSupportedHiveTypeException(errCode:Int,
 
 }
 
-case class HadoopConfSetFailedException(errCode:Int,
+case class HiveConfSetFailedException(errCode:Int,
                                          desc:String) extends ErrorException(errCode, desc) {
 
 }

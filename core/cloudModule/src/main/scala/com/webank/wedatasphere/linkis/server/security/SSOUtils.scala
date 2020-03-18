@@ -33,7 +33,6 @@ object SSOUtils extends Logging {
   private val sessionTimeout = ServerConfiguration.BDP_SERVER_WEB_SESSION_TIMEOUT.getValue.toLong
   private val userTicketIdToLastAccessTime = new util.HashMap[String, Long]()
   val sslEnable: Boolean = ServerConfiguration.BDP_SERVER_SECURITY_SSL.getValue
-  
   def decryptLogin(passwordString: String): String = if(sslEnable) {
     new String(RSAUtils.decrypt(passwordString), Configuration.BDP_ENCODING.getValue)
   } else passwordString

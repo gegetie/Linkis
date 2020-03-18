@@ -18,8 +18,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.webank.wedatasphere.linkis.metadata.hive.dao.HiveMetaDao">
 
+    <select id="getLocationByDbAndTable" resultType="java.lang.String" parameterType="map">
+        select LOCATION from SDS where SD_ID in (
+        select SD_ID from `TBLS`
+        where TBL_NAME = #{tableName,jdbcType=VARCHAR}
+        and DB_ID in (select DB_ID from `DBS` where NAME = #{dbName,jdbcType=VARCHAR})
+        )
+    </select>
+
     <select id="getDbsByUser" resultType="java.lang.String" parameterType="java.lang.String">
-        select NAME from(
+        <!--select NAME from(
         select t2.NAME  as NAME
         from DB_PRIVS t1, DBS t2
         where (lcase(t1.PRINCIPAL_NAME) = #{userName,jdbcType=VARCHAR}
@@ -32,15 +40,12 @@
         lcase(t1.PRINCIPAL_NAME) = #{userName,jdbcType=VARCHAR} or lcase(t1.PRINCIPAL_NAME) in (SELECT ROLE FROM(SELECT r.ROLE_NAME AS ROLE, u.PRINCIPAL_NAME AS USER FROM ROLES r LEFT JOIN (SELECT * FROM ROLE_MAP WHERE PRINCIPAL_TYPE = 'USER') u ON r.ROLE_ID = u.ROLE_ID)AS T where T.USER = #{userName,jdbcType=VARCHAR}))
         and t2.DB_ID=t3.DB_ID) a
         GROUP BY NAME
-        order by NAME
-    </select>
-    
-    <select id="getAllDbs" resultType="java.lang.String" >
-        select NAME from  DBS t2
+        order by NAME-->
+        select name from DBS
     </select>
 
     <select id="getTablesByDbNameAndUser" resultType="map"  parameterType="map">
-        select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
+        <!--select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
         from DB_PRIVS t1,TBLS t2, DBS t3
         where  t1.DB_ID =t3.DB_ID
         and t2.DB_ID=t3.DB_ID
@@ -71,31 +76,12 @@
         and lcase(t1.TBL_PRIV) in ('select','all')
         and t1.PRINCIPAL_NAME in (select ROLE_NAME from ROLES where ROLE_ID in (select ROLE_ID from ROLE_MAP where PRINCIPAL_NAME = #{userName,jdbcType=VARCHAR}))
         and t3.NAME = #{dbName,jdbcType=VARCHAR}
-        order by NAME;
-    </select>
-    
-    <select id="getTablesByDbName" resultType="map"  parameterType="map">
-      select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
-        from TBLS t2, DBS t3
-        where t2.DB_ID=t3.DB_ID
-        and t3.NAME = #{dbName,jdbcType=VARCHAR}
-        union
+        order by NAME;-->
         select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
-        from TBLS t2, DBS t3
+        from TBLS t2 , DBS t3
         where 
-        t2.DB_ID=t3.DB_ID
-        and t3.NAME = #{dbName,jdbcType=VARCHAR}
-        union
-        select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
-        from TBLS t2 , DBS t3
-        where t2.DB_ID=t3.DB_ID
-        and t3.NAME = #{dbName,jdbcType=VARCHAR}
-        union
-        select t2.TBL_NAME as NAME, t2.TBL_TYPE as TYPE, t2.CREATE_TIME as CREATE_TIME, t2.LAST_ACCESS_TIME as LAST_ACCESS_TIME, t2.OWNER as OWNER
-        from TBLS t2 , DBS t3
-        where t2.DB_ID=t3.DB_ID
-        and t3.NAME = #{dbName,jdbcType=VARCHAR}
-        order by NAME;
+         t2.DB_ID=t3.DB_ID
+        and t3.NAME = #{dbName,jdbcType=VARCHAR} ORDER BY NAME
     </select>
 
     <select id="getPartitionSize" resultType="java.lang.Long"  parameterType="map">
@@ -139,6 +125,19 @@
         where TBL_NAME = #{tableName,jdbcType=VARCHAR}
         and DB_ID in (select DB_ID from `DBS` where NAME = #{dbName,jdbcType=VARCHAR})
         );
+    </select>
+
+    <select id="getTableComment" resultType="String">
+        SELECT
+        tp.PARAM_VALUE
+        FROM
+        `DBS` d
+        LEFT JOIN `TBLS` t ON d.DB_ID = t.DB_ID
+        LEFT JOIN `TABLE_PARAMS` tp ON t.TBL_ID = tp.TBL_ID
+        WHERE
+        tp.PARAM_KEY = 'comment'
+        AND d.`NAME` = #{DbName}
+        AND t.TBL_NAME = #{tableName}
     </select>
 
 </mapper>

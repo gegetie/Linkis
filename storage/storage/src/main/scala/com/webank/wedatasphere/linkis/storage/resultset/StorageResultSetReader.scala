@@ -63,14 +63,17 @@ class StorageResultSetReader[K <: MetaData, V <: Record](resultSet: ResultSet[K,
     * @return
     */
   def readLine(): Array[Byte] = {
+
     var rowLen = 0
     try rowLen = Dolphin.readInt(inputStream)
     catch {
       case t:StorageWarnException => info(s"Read finished(读取完毕)") ; return null
       case t: Throwable => throw t
     }
+
     val rowBuffer = ArrayBuffer[Byte]()
     var len = 0
+
     //Read the entire line, except for the data of the line length(读取整行，除了行长的数据)
     while (rowLen > 0 && len >= 0) {
       if (rowLen > READ_CACHE)

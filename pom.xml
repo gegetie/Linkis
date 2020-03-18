@@ -22,7 +22,7 @@
 
     <groupId>com.webank.wedatasphere.linkis</groupId>
     <artifactId>linkis</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.3</version>
     <packaging>pom</packaging>
 
     <name>Linkis Project Parent POM</name>
@@ -46,27 +46,42 @@
 
     <modules>
 
-        <module>core/common</module>
+       <module>core/common</module>
         <module>core/cloudProtocol</module>
         <module>core/scheduler</module>
         <module>core/cloudModule</module>
         <module>core/cloudRPC</module>
         <module>core/cloudMybatis</module>
         <module>core/httpclient</module>
+        <module>core/hadoop-common</module>
         <module>storage/storage</module>
+
+        <module>bml/bmlcommon</module>
+        <module>bml/bmlclient</module>
         <module>resourceManager/resourcemanagercommon</module>
         <module>resourceManager/resourcemanagerclient</module>
-        <module>resourceManager/resourcemanagerserver</module>
+        <module>gateway/core</module>
+        <module>gateway/springcloudgateway</module>
+        <module>gateway/gateway-httpclient-support</module>
+
         <module>publicService/udf</module>
         <module>publicService/application</module>
         <module>publicService/jobhistory</module>
         <module>publicService/configuration</module>
         <module>publicService/variable</module>
         <module>publicService/workspace</module>
+        <module>publicService/workspace/client/workspace-httpclient</module>
+        <module>bml/bmlserver</module>
+        <module>resourceManager/resourcemanagerserver</module>
         <module>metadata</module>
+        <module>gateway/gateway-ujes-support</module>
+        <module>eurekaServer</module>
+        <module>publicService</module>
+        <module>userControl</module>
         <module>ujes/engine</module>
         <module>ujes/enginemanager</module>
         <module>ujes/entrance</module>
+        <module>bml/bml-engine-hook</module>
         <module>ujes/definedEngines/spark/engine</module>
         <module>ujes/definedEngines/spark/enginemanager</module>
         <module>ujes/definedEngines/spark/entrance</module>
@@ -75,29 +90,31 @@
         <module>ujes/definedEngines/hive/enginemanager</module>
         <module>ujes/definedEngines/hive/entrance</module>
 
-        <module>ujes/definedEngines/python/engine</module>
-        <module>ujes/definedEngines/python/enginemanager</module>
-        <module>ujes/definedEngines/python/entrance</module>
-
-        <module>ujes/definedEngines/pipeline/engine</module>
-        <module>ujes/definedEngines/pipeline/enginemanager</module>
-        <module>ujes/definedEngines/pipeline/entrance</module>        
         <module>ujes/definedEngines/impala/engine</module>
         <module>ujes/definedEngines/impala/enginemanager</module>
         <module>ujes/definedEngines/impala/entrance</module>
+
+        <module>ujes/definedEngines/python/engine</module>
+        <module>ujes/definedEngines/python/enginemanager</module>
+        <module>ujes/definedEngines/python/entrance</module>
+        <module>ujes/definedEngines/shell/engine</module>
+        <module>ujes/definedEngines/shell/enginemanager</module>
+        <module>ujes/definedEngines/shell/entrance</module>
         <module>ujes/definedEngines/jdbc/entrance</module>
-        <module>gateway/core</module>
-        <module>gateway/springcloudgateway</module>
-        <module>gateway/gateway-ujes-support</module>
-        <module>gateway/gateway-httpclient-support</module>
-        <module>eurekaServer</module>
-        <module>publicService</module>
         <module>ujes/client</module>
+        <module>ujes/definedEngines/pipeline/engine</module>
+        <module>ujes/definedEngines/pipeline/enginemanager</module>
+        <module>ujes/definedEngines/pipeline/entrance</module>
+        <module>ujes/definedEngines/mlsql/entrance</module>
+        <module>assembly/public-module</module>
         <module>assembly</module>
+
     </modules>
 
     <properties>
-        <hadoop.version>2.6.0-cdh5.9.2</hadoop.version>
+       <!-- <hadoop.version>2.7.2</hadoop.version>
+        <hive.version>1.2.1</hive.version>-->
+	<hadoop.version>2.6.0-cdh5.9.2</hadoop.version>
         <hive.version>1.1.0-cdh5.9.2</hive.version>
         <spring.eureka.version>1.4.4.RELEASE</spring.eureka.version>
         <spring.boot.version>2.0.3.RELEASE</spring.boot.version>
@@ -110,10 +127,13 @@
         <jersey.version>2.16</jersey.version>
         <jersey.servlet.version>2.23.1</jersey.servlet.version>
         <jetty.version>9.4.11.v20180605</jetty.version>
+        <httpclient.version>4.5.4</httpclient.version>
         <slf4j.version>1.7.12</slf4j.version>
-        <linkis.version>0.9.0</linkis.version>
+        <linkis.version>0.9.3</linkis.version>
         <maven.version>3.3.3</maven.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <dispatch.version>0.11.2</dispatch.version>
+        <jsoup.version>1.8.2</jsoup.version>
     </properties>
 
     <dependencyManagement>
@@ -213,15 +233,23 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <project.release.version>0.9.0</project.release.version>
+                <project.release.version>0.9.3</project.release.version>
                 <netty.version>4.1.17.Final</netty.version>
                 <json4s.version>3.5.3</json4s.version>
             </properties>
         </profile>
         <profile>
-            <id>spark2.1</id>
+            <id>spark2.3</id>
             <properties>
-                <project.release.version>0.9.0</project.release.version>
+                <project.release.version>0.9.3</project.release.version>
+                <netty.version>4.1.17.Final</netty.version>
+                <json4s.version>3.2.11</json4s.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark2.2-2.0</id>
+            <properties>
+                <project.release.version>0.9.3</project.release.version>
                 <netty.version>4.0.47.Final</netty.version>
                 <json4s.version>3.2.11</json4s.version>
             </properties>
@@ -267,27 +295,14 @@
                         </execution>
                     </executions>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.5</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
+
                </plugins>
             </build>
         </profile>
 
     </profiles>
 
- <distributionManagement>
+   <distributionManagement>
         <repository>
             <id>nexus-releases</id>
             <name>Internal Release Repository</name>
@@ -298,12 +313,10 @@
             <name>Internal Snapshot Repository</name>
             <url>http://m2.kanzhun-inc.com/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
-    </distributionManagement>
-
+    </distributionManagement> 
 
     <build>
         <pluginManagement>
-        
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

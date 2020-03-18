@@ -18,6 +18,7 @@ package com.webank.wedatasphere.linkis.entrance.conf
 
 import com.webank.wedatasphere.linkis.common.conf.CommonVars
 
+
 /**
   * created by zhuhui on 2019/10/10
   * Description:

@@ -9,11 +9,10 @@ English | [中文](docs/zh_CN/README.md)
 
 Linkis helps easily connect to various back-end computation/storage engines(Spark, Python, TiDB...), exposes various interfaces(REST, JDBC, Java ...), with multi-tenancy, high performance, and resource control.
 
-Linkis connects with computation/storage engines(Spark, Hive, Python and HBase), exposes REST/WS interface, and executes multi-language jobs(SQL, Pyspark, HiveQL and Scala), as a data middleware.
+Linkis connects with computation/storage engines(Spark, Hive, Python and HBase), exposes REST/WS interface, and executes multi-language jobs(SQL, Pyspark, HiveQL and Scala), as a computation middleware.
 
 Based on the microservices architecture, Linkis provides enterprise-level features of multi-tenant isolation, resource management and access control. It also offers convenient support to manage unified variables, UDFs, functions and resource files. it is also guaranteed with sophisticated task/job lifecycle management capabilities under high-concurrency, high-performance and high-availability scenarios.
 
-<<<<<<< HEAD
 
 ![linkis-intro-01](https://github.com/WeBankFinTech/Linkis/blob/master/images/linkis-intro-01.png?raw=true)
 
@@ -21,17 +20,13 @@ Based on the microservices architecture, Linkis provides enterprise-level featur
 <br>
 <br>
 
-Based on the concept of the data middleware architecture of Linkis, we have built a large amount of applications and systems on top of it.
+Based on the concept of the computation middleware architecture of Linkis, we have built a large amount of applications and systems on top of it.Currently available open-source project: 
+ - [**DataSphere Studio - Data Application Development& Management Portal**](https://github.com/WeBankFinTech/DataSphereStudio)
+ - [**Qualitis - Data Quality Tool**](https://github.com/WeBankFinTech/Qualitis)
+ - [**Scriptis - Data Development IDE Tool**](https://github.com/WeBankFinTech/Scriptis)
+ - [**Visualis - Data Visualization Tool**](https://github.com/WeBankFinTech/Visualis)
 
- - Currently available open-source project: [**Scriptis - Data Development IDE Tool**](https://github.com/WeBankFinTech/Scriptis).
-
- - Upcoming open-source projects：**Data Visualization Tool**, **Graphic Workflow Tool** and **Data Quality Tool**.
- 
  There will be more tools released as open-source projects, please stay tuned!
-=======
-![linkis-intro-01](https://github.com/WeBankFinTech/Linkis/blob/master/images/linkis-intro-01.png?raw=true)
-![linkis-intro-03](https://github.com/WeBankFinTech/Linkis/blob/master/images/linkis-intro-03.png?raw=true)
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 
 ## Features
 
@@ -59,7 +54,6 @@ Based on the concept of the data middleware architecture of Linkis, we have buil
 - Metadata Services: Real-time display of dataset table structure and partitions.
 
  **Compared with similar systems**
-<<<<<<< HEAD
 
 ![introduction01](docs/en_US/images/introduction/introduction01.png)
 
@@ -77,25 +71,6 @@ Based on the concept of the data middleware architecture of Linkis, we have buil
 
 [How to adapt Linkis with a new computation or storage engine](docs/en_US/ch3/How_to_adapt_Linkis_with_a_new_computation_or_storage_engine.md)
 
-=======
-
-![introduction01](docs/en_US/images/introduction/introduction01.png)
-
-# Documentations：
-
-[Linkis, make big data easier](docs/en_US/ch3/Linkis_Introduction.md)
-
-[Linkis Quick Deploy](docs/en_US/ch1/deploy.md)
-
-[Linkis Quick Start & Java SDK documentation](docs/en_US/ch3/Linkis_Java_SDK_doc.md)
-
-[HTTP APIs for frontend applications](docs/en_US/ch3/Linkis_HTTP_API_Doc.md)
-
-[WebSocket APIs for frontend applications](docs/en_US/ch3/Linkis_WebSocket_API_Doc.md)
-
-[How to adapt Linkis with a new computation or storage engine](docs/en_US/ch3/How_to_adapt_Linkis_with_a_new_computation_or_storage_engine.md)
-
->>>>>>> 997d75d6c01b4dff87e5ac1e3a5043ed048465d5
 ----
 
 # Architecture：

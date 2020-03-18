@@ -64,7 +64,7 @@ import java.util.EnumSet;
 @SpringBootApplication
 @EnableDiscoveryClient
 @RefreshScope
-@ComponentScan(basePackages = "com.webank.wedatasphere.linkis",
+@ComponentScan(basePackages = "com.webank.wedatasphere",
         excludeFilters = @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {DataWorkCloudCustomExcludeFilter.class}))
 public class DataWorkCloudApplication extends SpringBootServletInitializer {
     private static final Log logger = LogFactory.getLog(DataWorkCloudApplication.class);
@@ -173,6 +173,7 @@ public class DataWorkCloudApplication extends SpringBootServletInitializer {
     public WebServerFactoryCustomizer<JettyServletWebServerFactory> jettyFactoryCustomizer() {
         return new WebServerFactoryCustomizer<JettyServletWebServerFactory>() {
             public void customize(JettyServletWebServerFactory jettyServletWebServerFactory) {
+                jettyServletWebServerFactory.getJsp().setRegistered(false);
                 jettyServletWebServerFactory.addServerCustomizers(new JettyServerCustomizer() {
                     public void customize(Server server) {
                         Handler[] childHandlersByClass = server.getChildHandlersByClass(WebAppContext.class);

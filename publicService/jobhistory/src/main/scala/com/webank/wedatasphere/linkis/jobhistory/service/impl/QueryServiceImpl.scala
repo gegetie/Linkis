@@ -21,11 +21,11 @@ import java.util
 import java.util.Date
 
 import com.webank.wedatasphere.linkis.common.utils.{Logging, Utils}
-import com.webank.wedatasphere.linkis.protocol.query._
 import com.webank.wedatasphere.linkis.jobhistory.dao.TaskMapper
 import com.webank.wedatasphere.linkis.jobhistory.entity.{QueryTask, QueryTaskVO}
 import com.webank.wedatasphere.linkis.jobhistory.service.QueryService
 import com.webank.wedatasphere.linkis.jobhistory.transitional.TransitionalQueryService
+import com.webank.wedatasphere.linkis.protocol.query._
 import com.webank.wedatasphere.linkis.server.BDPJettyServerHelper
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -93,6 +93,8 @@ class QueryServiceImpl extends QueryService with Logging {
   def requestPersistTaskTask2QueryTask(requestPersistTask: RequestPersistTask): QueryTask = {
     val task: QueryTask = new QueryTask
     BeanUtils.copyProperties(requestPersistTask, task)
+    if(requestPersistTask.getSource != null)
+      task.setSourceJson(BDPJettyServerHelper.gson.toJson(requestPersistTask.getSource))
     if (requestPersistTask.getParams != null)
       task.setParamsJson(BDPJettyServerHelper.gson.toJson(requestPersistTask.getParams))
     else
@@ -100,6 +102,19 @@ class QueryServiceImpl extends QueryService with Logging {
     task
   }
 
+  override def getTaskByID(taskID: Long,userName:String): QueryTaskVO = {
+    val task = new QueryTask
+    task.setTaskID(taskID)
+    task.setUmUser(userName)
+    val taskR = taskMapper.selectTask(task)
+    if (taskR.size() > 0) {
+      import com.webank.wedatasphere.linkis.jobhistory.conversions.TaskConversions.queryTask2QueryTaskVO
+      taskR.get(0)
+    } else {
+      null
+    }
+  }
+  
   override def getTaskByID(taskID: Long): QueryTaskVO = {
     val task = new QueryTask
     task.setTaskID(taskID)
@@ -115,6 +130,6 @@ class QueryServiceImpl extends QueryService with Logging {
   override def search(taskID: Long, umUser: String, loginUser : String, status: String, sDate: Date, eDate: Date, executeApplicationName: String): util.List[QueryTask] = {
     import scala.collection.JavaConversions._
     val split: util.List[String] = if (status != null) status.split(",").toList else null
-    taskMapper.search(taskID, umUser, loginUser,split, sDate, eDate, executeApplicationName)
+    taskMapper.search(taskID, umUser, loginUser, split, sDate, eDate, executeApplicationName)
   }
 }

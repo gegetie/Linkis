@@ -21,7 +21,7 @@
     <parent>
         <artifactId>linkis</artifactId>
         <groupId>com.webank.wedatasphere.linkis</groupId>
-        <version>0.9.0</version>
+        <version>0.9.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -31,8 +31,22 @@
         <dependency>
             <groupId>com.webank.wedatasphere.linkis</groupId>
             <artifactId>linkis-common</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
+<!-- 发布位置配置 -->
+	<distributionManagement>
+		<repository>
+			<id>nexus-releases</id>
+			<name>Internal Release Repository</name>
+			<url>http://m2.kanzhun-inc.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus-snapshots</id>
+			<name>Internal Snapshot Repository</name>
+			<url>http://m2.kanzhun-inc.com/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
     <build>
         <plugins>

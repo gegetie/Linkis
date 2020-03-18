@@ -30,7 +30,6 @@ import scala.collection.JavaConversions._
   */
 object GatewaySSOUtils extends Logging {
   private def getCookies(gatewayContext: GatewayContext): Array[Cookie] = gatewayContext.getRequest.getCookies.flatMap(_._2).toArray
-  
   def getLoginUser(gatewayContext: GatewayContext): Option[String] = {
     val cookies = getCookies(gatewayContext)
     Utils.tryCatch(SSOUtils.getLoginUser(cookies)) {
@@ -39,14 +38,14 @@ object GatewaySSOUtils extends Logging {
       case t => throw t
     }
   }
-  
   def getLoginUsername(gatewayContext: GatewayContext): String = SSOUtils.getLoginUsername(getCookies(gatewayContext))
-  
   def setLoginUser(gatewayContext: GatewayContext, username: String): Unit = {
-    SSOUtils.setLoginUser(c => gatewayContext.getResponse.addCookie(c), username)
+    val proxyUser = ProxyUserUtils.getProxyUser(username)
+    SSOUtils.setLoginUser(c => gatewayContext.getResponse.addCookie(c), proxyUser)
   }
   def setLoginUser(request: GatewayHttpRequest, username: String): Unit = {
-    SSOUtils.setLoginUser(c => request.addCookie(c.getName, Array(c)), username)
+    val proxyUser = ProxyUserUtils.getProxyUser(username)
+    SSOUtils.setLoginUser(c => request.addCookie(c.getName, Array(c)), proxyUser)
   }
   def removeLoginUser(gatewayContext: GatewayContext): Unit = {
     SSOUtils.removeLoginUser(gatewayContext.getRequest.getCookies.flatMap(_._2).toArray)

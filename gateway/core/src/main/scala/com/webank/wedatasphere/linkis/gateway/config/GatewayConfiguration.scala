@@ -22,8 +22,11 @@ import com.webank.wedatasphere.linkis.common.conf.CommonVars
   * created by cooperyang on 2019/5/22.
   */
 object GatewayConfiguration {
-  val ADMIN_USER_CONFIG = CommonVars("wds.linkis.gateway.conf.admin.user.config", "/admin.properties")
-  val ADMIN_USER_SCAN_INTERVAL = CommonVars("wds.linkis.gateway.conf.admin.user.scan.interval", 1000 * 60 * 10)
+
+  val ENABLE_PROXY_USER = CommonVars("wds.linkis.gateway.conf.enable.proxy.user", false)
+  val PROXY_USER_CONFIG = CommonVars("wds.linkis.gateway.conf.proxy.user.config", "proxy.properties")
+  val PROXY_USER_SCAN_INTERVAL = CommonVars("wds.linkis.gateway.conf.proxy.user.scan.interval", 1000 * 60 * 10)
+
   val TOKEN_KEY = "Token-Code"
   val TOKEN_USER_KEY = "Token-User"
   val ENABLE_TOKEN_AUTHENTICATION = CommonVars("wds.linkis.gateway.conf.enable.token.auth", false)
@@ -37,4 +40,13 @@ object GatewayConfiguration {
 
   val ADMIN_USER = CommonVars("wds.linkis.gateway.admin.user", "hadoop")
 
+  val USERCONTROL_SWITCH_ON = CommonVars("wds.linkis.gateway.usercontrol_switch_on", false)
+
+//  val PROXY_USER_LIST = CommonVars("wds.linkis.gateway.conf.proxy.user.list", "").getValue.split(",")
+
+  /**
+    * QUERY_PERSISTENCE_SPRING_APPLICATION_NAME is the name of the application that represents the query module in springcloud
+    * QUERY_PERSISTENCE_SPRING_APPLICATION_NAME 是表示usercontrol模块在springcloud中的应用名称
+    */
+  val USERCONTROL_SPRING_APPLICATION_NAME = CommonVars("wds.linkis.query.application.name", "cloud-usercontrol")
 }

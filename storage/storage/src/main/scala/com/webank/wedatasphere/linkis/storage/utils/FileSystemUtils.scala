@@ -24,7 +24,6 @@ import com.webank.wedatasphere.linkis.common.utils.{Logging, Utils}
 import com.webank.wedatasphere.linkis.storage.FSFactory
 import com.webank.wedatasphere.linkis.storage.fs.FileSystem
 import com.webank.wedatasphere.linkis.storage.fs.impl.LocalFileSystem
-import org.apache.commons.lang.StringUtils
 
 /**
   * Created by johnnwang on 2018/11/2.
@@ -46,24 +45,6 @@ object FileSystemUtils extends Logging{
           fileSystem.mkdirs(filePath.getParent)
         }
         fileSystem.createNewFile(filePath)
-      }
-    }(Utils.tryQuietly(fileSystem.close()))
-  }
-  
-  def createNewFile(filePath: FsPath,createParentWhenNotExists: Boolean, permission :String): Unit = {
-    val fileSystem = FSFactory.getFs(filePath).asInstanceOf[FileSystem]
-    Utils.tryFinally {
-      fileSystem.init(null)
-      if (!fileSystem.exists(filePath)) {
-        if (!fileSystem.exists(filePath.getParent)) {
-          if(!createParentWhenNotExists) throw new IOException("parent dir " + filePath.getParent.getPath + " dose not exists.")
-          fileSystem.mkdirs(filePath.getParent)
-          fileSystem.setPermission(filePath, permission)
-        }
-        fileSystem.createNewFile(filePath)
-        if(StringUtils.isNotBlank(permission)){
-          fileSystem.setPermission(filePath, permission)
-        }
       }
     }(Utils.tryQuietly(fileSystem.close()))
   }

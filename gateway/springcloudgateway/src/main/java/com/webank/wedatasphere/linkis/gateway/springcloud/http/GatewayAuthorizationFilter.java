@@ -109,17 +109,35 @@ public class GatewayAuthorizationFilter extends JavaLog implements GlobalFilter,
         return Route.async().id(route.getId()).filters(route.getFilters()).order(route.getOrder())
                 .uri(uri).asyncPredicate(route.getPredicate()).build();
     }
+//    @Override
+//    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+//        AbstractServerHttpRequest request = (AbstractServerHttpRequest) exchange.getRequest();
+//        ServerHttpResponse response = exchange.getResponse();
+//        Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+//        BaseGatewayContext gatewayContext = getBaseGatewayContext(exchange, route);
+//
+//        DataBufferFactory bufferFactory = response.bufferFactory();
+//        if(((SpringCloudGatewayHttpRequest)gatewayContext.getRequest()).isRequestBodyAutowired()) {
+//            ServerHttpRequestDecorator decorator = new ServerHttpRequestDecorator(request) {
+//                @Override
+//                public Flux<DataBuffer> getBody() {
+//                    if(StringUtils.isBlank(gatewayContext.getRequest().getRequestBody())) return Flux.empty();
+//                    return Flux.just(bufferFactory.wrap(gatewayContext.getRequest().getRequestBody().getBytes(StandardCharsets.UTF_8)));
+//                }
+//            };
+//            return chain.filter(exchange.mutate().request(decorator).build());
+//        } else {
+//            return chain.filter(exchange);
+//        }
+//    }
 
     private Mono<Void> gatewayDeal(ServerWebExchange exchange, GatewayFilterChain chain, BaseGatewayContext gatewayContext) {
         SpringCloudGatewayHttpResponse gatewayHttpResponse = (SpringCloudGatewayHttpResponse) gatewayContext.getResponse();
-        
-        //安全校验
         if(!SecurityFilter.doFilter(gatewayContext)) {
             return gatewayHttpResponse.getResponseMono();
         } else if(gatewayContext.isWebSocketRequest()) {
             return chain.filter(exchange);
         }
-        
         ServiceInstance serviceInstance;
         try {
             parser.parse(gatewayContext);

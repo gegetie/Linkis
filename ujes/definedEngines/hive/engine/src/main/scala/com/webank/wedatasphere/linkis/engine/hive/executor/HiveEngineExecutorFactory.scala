@@ -27,9 +27,10 @@ import org.apache.hadoop.hive.ql.Driver
 import org.apache.hadoop.hive.ql.session.SessionState
 import org.apache.hadoop.security.UserGroupInformation
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import org.apache.commons.lang.StringUtils
+import org.springframework.stereotype.Component
 import com.webank.wedatasphere.linkis.common.conf.CommonVars
+
 /**
   * created by cooperyang on 2018/11/22
   * Description:
@@ -40,13 +41,15 @@ class HiveEngineExecutorFactory extends EngineExecutorFactory {
   private val HIVE_QUEUE_NAME:String = "mapreduce.job.queuename"
   private val BDP_QUEUE_NAME:String = "wds.linkis.yarnqueue"
   private val HIVE_AUX_JARS_PATH = CommonVars("hive.aux.jars.path", "", "Specify the full path of the user-defined jar package (multiple separated by English)(指定用户自定义的jar包全路径（多个以英文,分隔）。)")
-      
+
   override def createExecutor(options: JMap[String, String]): EngineExecutor = {
     val hiveConf:HiveConf = HiveUtils.getHiveConf
-    if (StringUtils.isNotBlank(HIVE_AUX_JARS_PATH.getValue)){
+    
+     if (StringUtils.isNotBlank(HIVE_AUX_JARS_PATH.getValue)){
        hiveConf.setAuxJars(HIVE_AUX_JARS_PATH.getValue)
        logger.info("hiveConf set aux Jars:"+HIVE_AUX_JARS_PATH.getValue)
     }
+    
     hiveConf.setVar(HiveConf.ConfVars.HIVEJAR, HiveUtils.jarOfClass(classOf[Driver])
       .getOrElse(throw HiveSessionStartFailedException(40012 ,"cannot find hive-exec.jar, start session failed!")))
     import scala.collection.JavaConversions._

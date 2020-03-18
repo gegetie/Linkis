@@ -37,10 +37,7 @@ class HiveEngineResourceFactory extends AbstractEngineResourceFactory{
       }
     }
 
-    new LoadInstanceResource(
-      HiveResourceConfiguration.HIVE_ENGINE_REQUEST_MEMORY.getValue(properties).toLong,
-      HiveResourceConfiguration.HIVE_ENGINE_REQUEST_CORES.getValue(properties),
-      HiveResourceConfiguration.HIVE_ENGINE_REQUEST_INSTANCE.getValue(properties)
-      )
+    new LoadInstanceResource(HiveResourceConfiguration.HIVE_ENGINE_REQUEST_MEMORY.getValue(properties).toLong,
+      HiveResourceConfiguration.HIVE_ENGINE_REQUEST_CORES.getValue(properties), HiveResourceConfiguration.HIVE_ENGINE_REQUEST_INSTANCE.getValue(properties))
   }
 }

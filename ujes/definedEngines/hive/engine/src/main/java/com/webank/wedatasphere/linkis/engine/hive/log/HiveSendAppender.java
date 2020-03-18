@@ -15,7 +15,7 @@
  */
 
 package com.webank.wedatasphere.linkis.engine.hive.log;
-import org.apache.hadoop.hive.conf.HiveConf;
+
 import com.webank.wedatasphere.linkis.engine.hive.progress.HiveProgressHelper;
 import com.webank.wedatasphere.linkis.engine.log.SendAppender;
 import org.apache.commons.lang.StringUtils;

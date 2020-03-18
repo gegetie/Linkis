@@ -18,12 +18,16 @@ package com.webank.wedatasphere.linkis.engine.execute
 
 import com.webank.wedatasphere.linkis.common.log.LogUtils
 import com.webank.wedatasphere.linkis.common.utils.{Logging, Utils}
+import com.webank.wedatasphere.linkis.engine.conf.EngineConfiguration
 import com.webank.wedatasphere.linkis.engine.exception.EngineErrorException
+import com.webank.wedatasphere.linkis.engine.extension.EnginePreExecuteHook
 import com.webank.wedatasphere.linkis.resourcemanager.Resource
 import com.webank.wedatasphere.linkis.scheduler.executer._
 import com.webank.wedatasphere.linkis.storage.resultset.ResultSetFactory
 import org.apache.commons.lang.StringUtils
 import org.apache.commons.lang.exception.ExceptionUtils
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by enjoyyin on 2018/9/17.
@@ -39,6 +43,24 @@ abstract class EngineExecutor(outputPrintLimit: Int, isSupportParallelism: Boole
 
   private var executedNum = 0
   private var succeedNum = 0
+
+
+  private val enginePreExecuteHooks:Array[EnginePreExecuteHook] = {
+    val hooks = new ArrayBuffer[EnginePreExecuteHook]()
+    EngineConfiguration.ENGINE_PRE_EXECUTE_HOOK_CLASSES.getValue.split(",") foreach {
+      hookStr => Utils.tryCatch{
+        val clazz = Class.forName(hookStr)
+        val obj = clazz.newInstance()
+        obj match {
+          case hook:EnginePreExecuteHook => hooks += hook
+          case _ => logger.warn(s"obj is not a engineHook obj is ${obj.getClass}")
+        }
+      }{
+        case e:Exception => logger.error("failed to load class", e)
+      }
+    }
+    hooks.toArray
+  }
 
 
   def setCodeParser(codeParser: CodeParser) = this.codeParser = Some(codeParser)
@@ -95,6 +117,15 @@ abstract class EngineExecutor(outputPrintLimit: Int, isSupportParallelism: Boole
       else if(isSupportParallelism) whenAvailable(f) else ensureIdle(f)
     ensureOp {
       val engineExecutorContext = createEngineExecutorContext(executeRequest)
+      Utils.tryCatch{
+        enginePreExecuteHooks foreach {
+          hook => logger.info(s"${hook.hookName} begins to do a hook")
+            hook.callPreExecuteHook(engineExecutorContext, executeRequest)
+            logger.info(s"${hook.hookName} ends to do a hook")
+        }
+      }{
+        case e:Exception => logger.info("failed to do with hook")
+      }
       var response: ExecuteResponse = null
       val incomplete = new StringBuilder
       val codes = Utils.tryCatch(codeParser.map(_.parse(executeRequest.code, engineExecutorContext)).getOrElse(Array(executeRequest.code))){
@@ -149,4 +180,68 @@ abstract class EngineExecutor(outputPrintLimit: Int, isSupportParallelism: Boole
   private[engine] def tryDead(): Unit = this.whenState(ExecutorState.ShuttingDown, transition(ExecutorState.Dead))
 
   override protected def callback(): Unit = {}
+
+//  class EngineExecutorContext {
+//    private var jobId: Option[String] = None
+//    private val aliasNum = new AtomicInteger(0)
+//    protected var storePath: Option[String] = None
+//
+//    def sendResultSet(resultSetWriter: ResultSetWriter[_ <: MetaData, _ <: Record]): Unit = {
+//      val fileName = new File(resultSetWriter.toFSPath.getPath).getName
+//      val index = if(fileName.indexOf(".") < 0) fileName.length else fileName.indexOf(".")
+//      val alias = if(fileName.startsWith("_")) fileName.substring(1, index) else fileName.substring(0, fileName.indexOf("_"))
+//      resultSetWriter.flush()
+//      Utils.tryFinally(sendResultSet(resultSetWriter.toString(), alias))(IOUtils.closeQuietly(resultSetWriter))
+//    }
+//
+//    def sendResultSet(output: String): Unit = sendResultSet(output, "_" + aliasNum.getAndIncrement())
+//
+//    private def sendResultSet(output: String, alias: String): Unit =
+//      if(resultSetFactory.isResultSetPath(output))
+//        resultSetListener.foreach(l => jobId.foreach(l.onResultSetCreated(_, output, alias)))
+//      else if(resultSetFactory.isResultSet(output))
+//        resultSetListener.foreach(l => jobId.foreach(l.onResultSetCreated(_, output, alias)))
+//      else throw new EngineErrorException(50050, "unknown resultSet: " + output)
+//
+//    def setJobId(jobId: String) = this.jobId = Option(jobId)
+//    def getJobId = jobId
+//    def setStorePath(storePath: String) = this.storePath = Option(storePath)
+//
+//    def sendResultSet(outputExecuteResponse: OutputExecuteResponse): Unit = outputExecuteResponse match {
+//      case AliasOutputExecuteResponse(alias, output) => sendResultSet(output, alias)
+//      case output: OutputExecuteResponse => sendResultSet(output.getOutput, "_" + aliasNum.getAndIncrement())
+//    }
+//
+//    protected def getDefaultStorePath: String = {
+//      val path = ENGINE_RESULT_SET_STORE_PATH.getValue
+//      (if(path.endsWith("/")) path else path + "/") + "user" + "/" +
+//        DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd") + "/" + Sender.getThisModuleInstance.getApplicationName +
+//        "/" + Sender.getThisModuleInstance.getInstance + "/" + System.nanoTime
+//    }
+//
+//    def createDefaultResultSetWriter(): ResultSetWriter[_ <: MetaData, _ <: Record] = createResultSetWriter(resultSetFactory.getResultSetByType(getDefaultResultSetType))
+//
+//    def createDefaultResultSetWriter(alias: String): ResultSetWriter[_ <: MetaData, _ <: Record] =
+//      createResultSetWriter(resultSetFactory.getResultSetByType(getDefaultResultSetType), alias)
+//
+//    def createResultSetWriter(resultSetType: String): ResultSetWriter[_ <: MetaData, _ <: Record] =
+//      createResultSetWriter(resultSetFactory.getResultSetByType(resultSetType), null)
+//
+//    def createResultSetWriter(resultSet: ResultSet[_ <: MetaData, _ <: Record]): ResultSetWriter[_ <: MetaData, _ <: Record] =
+//      createResultSetWriter(resultSet, null)
+//
+//    def createResultSetWriter(resultSetType: String, alias: String): ResultSetWriter[_ <: MetaData, _ <: Record] =
+//      createResultSetWriter(resultSetFactory.getResultSetByType(resultSetType), alias)
+//
+//    def createResultSetWriter(resultSet: ResultSet[_ <: MetaData, _ <: Record], alias: String): ResultSetWriter[_ <: MetaData, _ <: Record] = {
+//      val filePath = storePath.getOrElse(getDefaultStorePath)
+//      val fileName = if(StringUtils.isEmpty(alias)) "_" + aliasNum.getAndIncrement() else alias + "_" + aliasNum.getAndIncrement()
+//      val resultSetPath = resultSet.getResultSetPath(new FsPath(filePath), fileName)
+//      val resultSetWriter = ResultSetWriter.getResultSetWriter(resultSet, ENGINE_RESULT_SET_MAX_CACHE.getValue.toLong, resultSetPath)
+//      resultSetWriter
+//    }
+//
+//    def appendStdout(log: String): Unit = if(!engineInitialized)
+//      info(log) else logListener.foreach(ll => jobId.foreach(ll.onLogUpdate(_, log)))
+//  }
 }

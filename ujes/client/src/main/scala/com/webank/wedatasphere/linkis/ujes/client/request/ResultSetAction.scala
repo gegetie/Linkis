@@ -28,13 +28,12 @@ import com.webank.wedatasphere.linkis.ujes.client.exception.UJESClientBuilderExc
   * created by cooperyang on 2019/5/23.
   */
 class ResultSetAction private() extends GetAction with UJESJobAction {
-  override def suffixURLs: Array[String] = Array("publicservice", "openFile")
+  override def suffixURLs: Array[String] = Array("filesystem", "openFile")
 }
 object ResultSetAction {
   def builder(): Builder = new Builder
   class Builder private[ResultSetAction]() {
     private var user: String = _
-    private var umUser: String = _
     private var path: String = _
     private var page: Int = _
     private var pageSize: Int = _
@@ -42,10 +41,6 @@ object ResultSetAction {
 
     def setUser(user: String): Builder = {
       this.user = user
-      this
-    }
-     def setUmUser(umUser: String): Builder = {
-      this.umUser = umUser
       this
     }
 
@@ -78,7 +73,6 @@ object ResultSetAction {
       if(pageSize > 0) resultSetAction.setParameter("pageSize", pageSize)
       resultSetAction.setParameter("charset", charset)
       resultSetAction.setUser(user)
-      resultSetAction.setParameter("umUser", umUser)
       resultSetAction
     }
 

@@ -27,7 +27,7 @@ import org.springframework.http.{HttpStatus, ResponseCookie}
 import reactor.core.publisher.{Flux, Mono}
 import reactor.ipc.netty.http.server.HttpServerResponse
 import reactor.ipc.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
-import com.webank.wedatasphere.linkis.gateway.exception.GatewayErrorException
+
 /**
   * created by cooperyang on 2019/1/9.
   */
@@ -47,7 +47,7 @@ class SpringCloudGatewayHttpResponse(response: ServerHttpResponse) extends Gatew
     responseCookie.httpOnly(cookie.isHttpOnly)
     response.addCookie(responseCookie.build())
   }
-  
+
   override def setHeader(key: String, value: String): Unit = response.getHeaders.add(key, value)
 
   override def setStatus(status: Int): Unit = response.setStatusCode(HttpStatus.valueOf(status))

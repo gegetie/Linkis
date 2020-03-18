@@ -36,6 +36,7 @@ public class RequestPersistTask  implements Task, QueryProtocol {
     private String execId;
     private String umUser;
     private String loginUser;
+    
     /**
      * EngineInstance is the instance information of the engine that the task executes, ip+port
      * engineInstance 是指task执行所请求的engine的实例信息，ip+port
@@ -162,6 +163,12 @@ public class RequestPersistTask  implements Task, QueryProtocol {
         this.umUser = umUser;
     }
 
+    public String getLoginUser() {
+		return loginUser;
+	}
+	public void setLoginUser(String loginUser) {
+		this.loginUser = loginUser;
+	}
 
 
     public Float getProgress() {
@@ -241,13 +248,7 @@ public class RequestPersistTask  implements Task, QueryProtocol {
         this.executionCode = executionCode;
     }
 
-    public String getLoginUser() {
-		return loginUser;
-	}
-	public void setLoginUser(String loginUser) {
-		this.loginUser = loginUser;
-	}
-	public String getLogPath() {
+    public String getLogPath() {
         return logPath;
     }
 

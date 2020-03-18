@@ -36,8 +36,6 @@ object DataType extends Logging{
   val BIGINT_REGEX = "^bigint.*".r.unanchored
   val FLOAT_REGEX = "^float.*".r.unanchored
   val DOUBLE_REGEX = "^double.*".r.unanchored
-
-//array<bigint>
   
   val VARCHAR_REGEX = "^varchar.*".r.unanchored
   val CHAR_REGEX = "^char.*".r.unanchored

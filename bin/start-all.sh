@@ -22,256 +22,275 @@ info="We will start all linkis applications, it will take some time, please wait
 echo ${info}
 
 #Actively load user env
+source /etc/profile
 source ~/.bash_profile
 
-workDir=`dirname "${BASH_SOURCE-$0}"`
-workDir=`cd "$workDir"; pwd`
+shellDir=`dirname $0`
+workDir=`cd ${shellDir}/..;pwd`
 
-
-CONF_DIR="${workDir}"/../conf
-CONF_FILE=${CONF_DIR}/config.sh
-
+CONF_DIR="${workDir}"/conf
+export LINKIS_DSS_CONF_FILE=${LINKIS_DSS_CONF_FILE:-"${CONF_DIR}/config.sh"}
+export DISTRIBUTION=${DISTRIBUTION:-"${CONF_DIR}/config.sh"}
+#source $LINKIS_DSS_CONF_FILE
+source ${DISTRIBUTION}
 function isSuccess(){
 if [ $? -ne 0 ]; then
-    echo "ERROR:  " + $1
+    echo "Failed to " + $1
     exit 1
 else
-    echo "INFO:" + $1
+    echo "Succeed to" + $1
 fi
 }
-
-sudo yum -y install dos2unix
 
 
 local_host="`hostname --fqdn`"
 
+ipaddr=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}')
+
+function isLocal(){
+    if [ "$1" == "127.0.0.1" ];then
+        return 0
+    elif [ $1 == "localhost" ]; then
+        return 0
+    elif [ $1 == $local_host ]; then
+        return 0
+    elif [ $1 == $ipaddr ]; then
+        return 0
+    fi
+        return 1
+}
+
+function executeCMD(){
+   isLocal $1
+   flag=$?
+   echo "Is local "$flag
+   if [ $flag == "0" ];then
+      eval $2
+   else
+      ssh -p $SSH_PORT $1 $2
+   fi
+
+}
+
 #if there is no LINKIS_INSTALL_HOME，we need to source config again
 if [ -z ${LINKIS_INSTALL_HOME} ];then
-    echo "Warning: LINKIS_INSTALL_HOME does not exist, we will source config"
-    if [ ! -f "${CONF_FILE}" ];then
+    echo "Info: LINKIS_INSTALL_HOME does not exist, we will source config"
+    if [ ! -f "${LINKIS_DSS_CONF_FILE}" ];then
         echo "Error: can not find config file, start applications failed"
         exit 1
     else
-        source ${CONF_FILE}
+        source ${LINKIS_DSS_CONF_FILE}
     fi
 fi
 APP_PREFIX="linkis-"
 
+function startApp(){
+echo "<-------------------------------->"
+echo "Begin to start $SERVER_NAME"
+SERVER_PATH=${APP_PREFIX}${SERVER_NAME}
+SERVER_BIN=${LINKIS_INSTALL_HOME}/${SERVER_PATH}/bin
+SERVER_LOCAL_START_CMD="dos2unix ${SERVER_BIN}/* > /dev/null 2>&1; dos2unix ${SERVER_BIN}/../conf/* > /dev/null 2>&1; sh ${SERVER_BIN}/start-${SERVER_NAME}.sh"
+SERVER_REMOTE_START_CMD="source /etc/profile;source ~/.bash_profile;cd ${SERVER_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-${SERVER_NAME}.sh > /dev/null 2>&1"
+if test -z "$SERVER_IP"
+then
+  SERVER_IP=$local_host
+fi
+
+if ! executeCMD $SERVER_IP "test -e $SERVER_BIN"; then
+  echo "$SERVER_NAME is not installed,the startup steps will be skipped"
+  return
+fi
+
+isLocal $SERVER_IP
+flag=$?
+echo "Is local "$flag
+if [ $flag == "0" ];then
+   eval $SERVER_LOCAL_START_CMD
+else
+   ssh -p $SSH_PORT $SERVER_IP $SERVER_REMOTE_START_CMD
+fi
+isSuccess "End to start $SERVER_NAME"
+echo "<-------------------------------->"
+sleep 3
+}
+
 
 #eureka
-echo "<-------------------------------->"
-echo "Begin to start Eureka Server"
-EUREKA_NAME="eureka"
-EUREKA_BIN=${LINKIS_INSTALL_HOME}/${EUREKA_NAME}/bin
-EUREKA_START_CMD="cd ${EUREKA_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-${EUREKA_NAME}.sh"
-if [ -n "${EUREKA_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${EUREKA_INSTALL_IP} "${EUREKA_START_CMD}"
+SERVER_NAME="eureka"
+APP_PREFIX=""
+SERVER_IP=$EUREKA_INSTALL_IP
+startApp
 
-else
-    ssh -p $SSH_PORT ${local_host} "${EUREKA_START_CMD}"
-fi
-isSuccess "End to start Eureka Server"
-echo "<-------------------------------->"
-sleep 3
 
+APP_PREFIX="linkis-"
 #gateway
-echo "<-------------------------------->"
-echo "Begin to start Gateway"
-GATEWAY_NAME="gateway"
-GATEWAY_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${GATEWAY_NAME}/bin
-GATEWAY_START_CMD="cd ${GATEWAY_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-${GATEWAY_NAME}.sh"
-if [ -n "${GATEWAY_INSTALL_IP}"  ];then
-    ssh -p $SSH_PORT ${GATEWAY_INSTALL_IP} "${GATEWAY_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${GATEWAY_START_CMD}"
-fi
-isSuccess "End to start Gateway"
-echo "<-------------------------------->"
-sleep 3
+SERVER_NAME="gateway"
+SERVER_IP=$GATEWAY_INSTALL_IP
+startApp
 
-#pub_service
-echo "<-------------------------------->"
-echo "Begin to start Public Service"
-PUB_SERVICE_NAME="publicservice"
-PUB_SERVICE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${PUB_SERVICE_NAME}/bin
-PUB_SERVICE_START_CMD="cd ${PUB_SERVICE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-${PUB_SERVICE_NAME}.sh"
-if [ -n "${PUBLICSERVICE_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${PUBLICSERVICE_INSTALL_IP} "${PUB_SERVICE_START_CMD}"
-else
-        ssh -p $SSH_PORT ${local_host} "${PUB_SERVICE_START_CMD}"
-fi
-isSuccess "End to start Public Service"
-echo "<-------------------------------->"
-sleep 3
+#publicservice
+SERVER_NAME="publicservice"
+SERVER_IP=$PUBLICSERVICE_INSTALL_IP
+startApp
+
 
 #metadata
-echo "<-------------------------------->"
-echo "Begin to start metadata"
-METADATA_NAME="metadata"
-METADATA_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${METADATA_NAME}/bin
-METADATA_START_CMD="if [ -d ${METADATA_BIN} ];then cd ${METADATA_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-metadata.sh;else echo 'WARNING:Metadata will not start';fi"
-if [ -n "${METADATA_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${METADATA_INSTALL_IP} "${METADATA_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${METADATA_START_CMD}"
-fi
-isSuccess  "End to start Metadata"
-echo "<-------------------------------->"
-sleep 3
+SERVER_NAME="metadata"
+SERVER_IP=$METADATA_INSTALL_IP
+startApp
 
-#Resource Manager
-echo "<-------------------------------->"
-echo "Begin to start Resource Manager"
-RM_NAME="resourcemanager"
-RM_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${RM_NAME}/bin
-RM_START_CMD="cd ${RM_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-${RM_NAME}.sh"
-if [ -n "${RESOURCEMANAGER_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${RESOURCEMANAGER_INSTALL_IP} "${RM_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${RM_START_CMD}"
-fi
-isSuccess "End to start Resource Manager"
-echo "<-------------------------------->"
+#bml
+SERVER_NAME="bml"
+SERVER_IP=$BML_INSTALL_IP
+startApp
 
+#resourcemanager
+SERVER_NAME="resourcemanager"
+SERVER_IP=$RESOURCEMANAGER_INSTALL_IP
+startApp
 echo "sleep 15 seconds to wait RM to be ready"
 sleep 15
 
-#SparkEntrance
-echo "<-------------------------------->"
-echo "Begin to start Spark Entrance"
-SPARK_ENTRANCE_NAME="ujes-spark-entrance"
-SPARK_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${SPARK_ENTRANCE_NAME}/bin
-SPARK_ENTRANCE_START_CMD="if [ -d ${SPARK_ENTRANCE_BIN} ];then cd ${SPARK_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-sparkentrance.sh;else echo 'WARNING:Spark Entrance will not start';fi"
-if [ -n "${SPARK_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${SPARK_INSTALL_IP} "${SPARK_ENTRANCE_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${SPARK_ENTRANCE_START_CMD}"
-fi
-echo "End to end Spark Entrance started"
-echo "<-------------------------------->"
-sleep 3
-#Spark Engine Manager
-echo "<-------------------------------->"
-echo "Begin to Spark Engine Manager"
-SPARK_EM_NAME="ujes-spark-enginemanager"
-SPARK_EM_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${SPARK_EM_NAME}/bin
-SPARK_EM_START_CMD="if [ -d ${SPARK_EM_BIN} ];then cd ${SPARK_EM_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-sparkenginemanager.sh;else echo 'WARNING:Spark EM will not start';fi"
-if [ -n "${SPARK_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${SPARK_INSTALL_IP} "${SPARK_EM_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${SPARK_EM_START_CMD}"
-fi
-echo "End to start Spark Engine Manager "
-echo "<-------------------------------->"
-sleep 3
-#HiveEntrance
-echo "<-------------------------------->"
-echo "Begin to start Hive Entrance"
-HIVE_ENTRANCE_NAME="ujes-hive-entrance"
-HIVE_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${HIVE_ENTRANCE_NAME}/bin
-HIVE_ENTRANCE_START_CMD="if [ -d ${HIVE_ENTRANCE_BIN} ];then cd ${HIVE_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-hiveentrance.sh;else echo 'WARNING:Hive Entrance will not start';fi"
-if [ -n "${HIVE_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${HIVE_INSTALL_IP} "${HIVE_ENTRANCE_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${HIVE_ENTRANCE_START_CMD}"
-fi
-echo "End to start Hive Entrance"
-echo "<-------------------------------->"
+APP_PREFIX="linkis-ujes-"
 
-sleep 3
+#python-entrance
+SERVER_NAME="python-entrance"
+SERVER_IP=$PYTHON_INSTALL_IP
+startApp
+
+#python-enginemanager
+SERVER_NAME="python-enginemanager"
+SERVER_IP=$PYTHON_INSTALL_IP
+startApp
+
+#shell-entrance
+SERVER_NAME="shell-entrance"
+SERVER_IP=$SHELL_INSTALL_IP
+startApp
+
+#shell-enginemanager
+SERVER_NAME="shell-enginemanager"
+SERVER_IP=$SHELL_INSTALL_IP
+startApp
+
+#spark-entrance
+SERVER_NAME="spark-entrance"
+SERVER_IP=$SPARK_INSTALL_IP
+startApp
+
+#spark-enginemanager
+SERVER_NAME="spark-enginemanager"
+SERVER_IP=$SPARK_INSTALL_IP
+startApp
+
+#hive-entrance
+SERVER_NAME="hive-entrance"
+SERVER_IP=$HIVE_INSTALL_IP
+startApp
 
 
-#Hive Engine Manager
-echo "<-------------------------------->"
-echo "Begin to start Hive Engine Manager"
-HIVE_EM_NAME="ujes-hive-enginemanager"
-HIVE_EM_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${HIVE_EM_NAME}/bin
-HIVE_EM_START_CMD="if [ -d ${HIVE_EM_BIN} ];then cd ${HIVE_EM_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-hiveenginemanager.sh > /dev/null;else echo 'WARNING:Hive EM will not start';fi"
-if [ -n "${HIVE_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${HIVE_INSTALL_IP} "${HIVE_EM_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${HIVE_EM_START_CMD}"
-fi
-echo "End to start Hive Engine Manager"
-echo "<-------------------------------->"
-
-sleep 3
-
-#PythonEntrance
-echo "<-------------------------------->"
-echo "Begin to start Python Entrance"
-PYTHON_ENTRANCE_NAME="ujes-python-entrance"
-PYTHON_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${PYTHON_ENTRANCE_NAME}/bin
-PYTHON_ENTRANCE_START_CMD="if [ -d ${PYTHON_ENTRANCE_BIN} ];then cd ${PYTHON_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-pythonentrance.sh;else echo 'WARNING:Python Entrance will not start';fi"
-if [ -n "${PYTHON_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${PYTHON_INSTALL_IP} "${PYTHON_ENTRANCE_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${PYTHON_ENTRANCE_START_CMD}"
-fi
-echo "End to start Python Entrance"
-echo "<-------------------------------->"
-
-sleep 3
-
-#Python Engine Manager
-echo "<-------------------------------->"
-echo "Begin to start Python Engine Manager"
-PYTHON_EM_NAME="ujes-python-enginemanager"
-PYTHON_EM_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${PYTHON_EM_NAME}/bin
-PYTHON_EM_START_CMD="if [ -d ${PYTHON_EM_BIN} ];then cd ${PYTHON_EM_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-pythonenginemanager.sh;else echo 'WARNING:Python EM will not start';fi"
-if [ -n "${PYTHON_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${PYTHON_INSTALL_IP} "${PYTHON_EM_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${PYTHON_EM_START_CMD}"
-fi
-echo "End to start Python Engine Manager"
-echo "<-------------------------------->"
-
-sleep 3
-
+#hive-enginemanager
+SERVER_NAME="hive-enginemanager"
+SERVER_IP=$HIVE_INSTALL_IP
+startApp
 
 
 #JDBCEntrance
-echo "<-------------------------------->"
-echo "Begin to start JDBC Entrance"
-JDBC_ENTRANCE_NAME="ujes-jdbc-entrance"
-JDBC_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${JDBC_ENTRANCE_NAME}/bin
-JDBC_ENTRANCE_START_CMD="if [ -d ${JDBC_ENTRANCE_BIN} ];then cd ${JDBC_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-jdbcentrance.sh;else echo 'WARNING:JDBC Entrance will not start';fi"
-if [ -n "${JDBC_INSTALL_IP}" ];then
-    ssh -p $SSH_PORT ${JDBC_INSTALL_IP} "${JDBC_ENTRANCE_START_CMD}"
-else
-    ssh -p $SSH_PORT ${local_host} "${JDBC_ENTRANCE_START_CMD}"
-fi
-echo "End to start JDBC Entrance"
-echo "<-------------------------------->"
-
-sleep 3
-
-
-
-##PipelineEntrance
-#echo "Pipeline Entrance is Starting"
-#PIPELINE_ENTRANCE_NAME="ujes-pipeline-entrance"
-#PIPELINE_ENTRANCE_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${PIPELINE_ENTRANCE_NAME}/bin
-#PIPELINE_ENTRANCE_START_CMD="cd ${PIPELINE_ENTRANCE_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-pipelineentrance.sh"
-#if [ -n "${PIPELINE_INSTALL_IP}" ];then
-#    ssh -p $SSH_PORT ${PIPELINE_INSTALL_IP} "${PIPELINE_ENTRANCE_START_CMD}"
-#else
-#    ssh -p $SSH_PORT ${local_host} "${PIPELINE_ENTRANCE_START_CMD}"
-#fi
-#echo "Pipeline Entrance started "
-#
-##Pipeline Engine Manager
-#echo "Pipeline Engine Manager is Starting"
-#PIPELINE_EM_NAME="ujes-pipeline-enginemanager"
-#PIPELINE_EM_BIN=${LINKIS_INSTALL_HOME}/${APP_PREFIX}${PIPELINE_EM_NAME}/bin
-#PIPELINE_EM_START_CMD="cd ${PIPELINE_EM_BIN}; dos2unix ./* > /dev/null 2>&1; dos2unix ../conf/* > /dev/null 2>&1; sh start-pipelineenginemanager.sh"
-#if [ -n "${PIPELINE_INSTALL_IP}" ];then
-#    ssh -p $SSH_PORT ${PIPELINE_INSTALL_IP} "${PIPELINE_EM_START_CMD}"
-#else
-#    ssh -p $SSH_PORT ${local_host} "${PIPELINE_EM_START_CMD}"
-#fi
-#echo "Pipeline Engine Manager started "
+SERVER_NAME="jdbc-entrance"
+SERVER_IP=$JDBC_INSTALL_IP
+startApp
 
 
 echo "start-all shell script executed completely"
+
+echo "Start to check all dss microservice"
+
+function checkServer(){
+echo "<-------------------------------->"
+echo "Begin to check $SERVER_NAME"
+if test -z "$SERVER_IP"
+then
+  SERVER_IP=$local_host
+fi
+
+SERVER_BIN=${LINKIS_INSTALL_HOME}/$SERVER_NAME/bin
+
+if ! executeCMD $SERVER_IP "test -e $SERVER_BIN"; then
+  echo "$SERVER_NAME is not installed,the checkServer steps will be skipped"
+  return
+fi
+
+sh $workDir/bin/checkServices.sh $SERVER_NAME $SERVER_IP $SERVER_PORT
+isSuccess "start $SERVER_NAME "
+echo "<-------------------------------->"
+sleep 3
+}
+SERVER_NAME="eureka"
+SERVER_IP=$EUREKA_INSTALL_IP
+SERVER_PORT=$EUREKA_PORT
+checkServer
+
+APP_PREFIX="linkis-"
+SERVER_NAME=$APP_PREFIX"gateway"
+SERVER_IP=$GATEWAY_INSTALL_IP
+SERVER_PORT=$GATEWAY_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"publicservice"
+SERVER_IP=$PUBLICSERVICE_INSTALL_IP
+SERVER_PORT=$PUBLICSERVICE_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"metadata"
+SERVER_IP=$METADATA_INSTALL_IP
+SERVER_PORT=$METADATA_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"resourcemanager"
+SERVER_IP=$RESOURCEMANAGER_INSTALL_IP
+SERVER_PORT=$RESOURCEMANAGER_PORT
+checkServer
+
+
+SERVER_NAME=$APP_PREFIX"bml"
+SERVER_IP=$BML_INSTALL_IP
+SERVER_PORT=$BML_PORT
+checkServer
+
+APP_PREFIX="linkis-ujes-"
+SERVER_NAME=$APP_PREFIX"python-entrance"
+SERVER_IP=$PYTHON_INSTALL_IP
+SERVER_PORT=$PYTHON_ENTRANCE_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"python-enginemanager"
+SERVER_IP=$PYTHON_INSTALL_IP
+SERVER_PORT=$PYTHON_EM_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"spark-entrance"
+SERVER_IP=$SPARK_INSTALL_IP
+SERVER_PORT=$SPARK_ENTRANCE_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"spark-enginemanager"
+SERVER_IP=$SPARK_INSTALL_IP
+SERVER_PORT=$SPARK_EM_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"hive-enginemanager"
+SERVER_IP=$HIVE_INSTALL_IP
+SERVER_PORT=$HIVE_EM_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"hive-entrance"
+SERVER_IP=$HIVE_INSTALL_IP
+SERVER_PORT=$HIVE_ENTRANCE_PORT
+checkServer
+
+SERVER_NAME=$APP_PREFIX"jdbc-entrance"
+SERVER_IP=$JDBC_INSTALL_IP
+SERVER_PORT=$JDBC_ENTRANCE_PORT
+checkServer
+
+echo "Linkis started successfully"

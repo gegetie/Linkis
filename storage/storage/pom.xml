@@ -19,11 +19,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <version>0.9.0</version>
+        <version>0.9.3</version>
         <groupId>com.webank.wedatasphere.linkis</groupId>
         <artifactId>linkis</artifactId>
     </parent>
+
+
     <packaging>jar</packaging>
     <artifactId>linkis-storage</artifactId>
 
@@ -32,6 +35,25 @@
             <groupId>com.webank.wedatasphere.linkis</groupId>
             <artifactId>linkis-common</artifactId>
             <version>${linkis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.webank.wedatasphere.linkis</groupId>
+            <artifactId>linkis-hadoop-common</artifactId>
+            <version>${linkis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
+            <version>${json4s.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -51,6 +73,20 @@
         </dependency>
 
     </dependencies>
+
+<!-- 发布位置配置 -->
+	<distributionManagement>
+		<repository>
+			<id>nexus-releases</id>
+			<name>Internal Release Repository</name>
+			<url>http://m2.kanzhun-inc.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus-snapshots</id>
+			<name>Internal Snapshot Repository</name>
+			<url>http://m2.kanzhun-inc.com/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
     <build>
         <plugins>

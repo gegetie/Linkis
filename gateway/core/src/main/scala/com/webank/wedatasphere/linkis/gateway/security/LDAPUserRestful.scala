@@ -19,14 +19,6 @@ package com.webank.wedatasphere.linkis.gateway.security
 import com.webank.wedatasphere.linkis.common.utils.{LDAPUtils, Logging, Utils}
 import com.webank.wedatasphere.linkis.gateway.http.GatewayContext
 import com.webank.wedatasphere.linkis.server._
-import org.apache.commons.lang.StringUtils
-import com.webank.wedatasphere.linkis.common.utils.{RSAUtils, Utils}
-import com.webank.wedatasphere.linkis.gateway.config.GatewayConfiguration
-import com.webank.wedatasphere.linkis.gateway.http.GatewayContext
-import com.webank.wedatasphere.linkis.gateway.security.sso.SSOInterceptor
-import com.webank.wedatasphere.linkis.server.conf.ServerConfiguration
-import com.webank.wedatasphere.linkis.server.security.SSOUtils
-import com.webank.wedatasphere.linkis.server.{Message, _}
 
 /**
   * created by cooperyang on 2019/1/9.
@@ -34,11 +26,15 @@ import com.webank.wedatasphere.linkis.server.{Message, _}
 class LDAPUserRestful extends UserPwdAbstractUserRestful with Logging {
 
   override def login(userName: String, password: String): Message = Utils.tryCatch{
-            com.webank.wedatasphere.linkis.common.utils.BossLDAPUtils.login(userName.toString, password.toString)
-            "login successful(登录成功)！".data("userName", userName).data("isAdmin", false).data("loginNum", 4).data("lastLoginTime", System.currentTimeMillis)
-    }{ t =>
-      warn("wrong user name or password(用户名或密码错误)！", t)
-      Message.error("wrong user name or password(用户名或密码错误)！")
-    }
+    LDAPUtils.login(userName.toString, password.toString)
+    "login successful(登录成功)！".data("userName", userName).data("isAdmin", false)
+  }{ t =>
+    warn("wrong user name or password(用户名或密码错误)！", t)
+    Message.error("wrong user name or password(用户名或密码错误)！")
+  }
+
+  override def register(gatewayContext: GatewayContext): Message = {
+    Message.error("please implements the register method(请自行实现注册方法)")
+  }
 
 }

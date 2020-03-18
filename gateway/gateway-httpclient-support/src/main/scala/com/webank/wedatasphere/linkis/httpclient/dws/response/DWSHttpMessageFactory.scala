@@ -44,7 +44,6 @@ object DWSHttpMessageFactory {
   def getDWSHttpMessageResult(method: String): Option[DWSHttpMessageResultInfo] = methodToHttpMessageClasses.get(method).orElse {
     methodRegex.find(method.matches).map(methodToHttpMessageClasses.apply)
   }
- 
+
 }
 case class DWSHttpMessageResultInfo(method: String, clazz: Class[_])
-

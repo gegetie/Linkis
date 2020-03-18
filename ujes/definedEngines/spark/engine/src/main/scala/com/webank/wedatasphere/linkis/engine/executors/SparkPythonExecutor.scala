@@ -95,8 +95,6 @@ class SparkPythonExecutor(val sc: SparkContext,  val sqlContext: SQLContext,sess
 
     val pythonScriptPath = CommonVars("python.script.path", "python/mix_pyspark.py").getValue
 
-    info("pythonExec is: " + pythonExec+ "pythonScriptPath is "+ pythonScriptPath)
-    
     val port = EngineUtils.findAvailPort
     gatewayServer = new GatewayServer(this, port)
     gatewayServer.start()

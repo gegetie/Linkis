@@ -36,7 +36,7 @@
             <useStrictFiltering>true</useStrictFiltering>
             <useTransitiveFiltering>true</useTransitiveFiltering>
 
-            <excludes>
+           <!-- <excludes>
                 <exclude>antlr:antlr:jar</exclude>
                 <exclude>aopalliance:aopalliance:jar</exclude>
                 <exclude>asm:asm:jar</exclude>
@@ -155,6 +155,7 @@
                 <exclude>org.apache.hadoop:hadoop-auth:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-common:jar</exclude>
                 <exclude>org.apache.hadoop:hadoop-hdfs:jar</exclude>
+                <exclude>org.apache.htrace:htrace-core:jar</exclude>
                 <exclude>org.apache.httpcomponents:httpclient:jar</exclude>
                 <exclude>org.apache.httpcomponents:httpcore:jar</exclude>
                 <exclude>org.apache.logging.log4j:log4j-api:jar</exclude>
@@ -284,7 +285,7 @@
                 <exclude>xmlenc:xmlenc:jar</exclude>
                 <exclude>xmlpull:xmlpull:jar</exclude>
                 <exclude>xpp3:xpp3_min:jar</exclude>
-            </excludes>
+            </excludes>-->
         </dependencySet>
     </dependencySets>
 

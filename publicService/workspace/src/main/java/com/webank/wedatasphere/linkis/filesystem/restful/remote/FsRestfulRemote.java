@@ -64,12 +64,11 @@ public interface FsRestfulRemote {
     @PostMapping("/api/filesystem/resultdownload")
     void resultDownload(@Context HttpServletRequest req, @Context HttpServletResponse response, @RequestBody Map<String,String> json) throws IOException, WorkSpaceException;
 
-    
     @GetMapping("/api/filesystem/isExit")
     Response isExist(@Context HttpServletRequest req, @QueryParam("path")String path) throws IOException, WorkSpaceException;
 
     @GetMapping("/api/filesystem/openFile")
-    Response openFile(@Context HttpServletRequest req, @QueryParam("umUser") String umUser,@QueryParam("path")String path,@QueryParam("page")Integer page,@QueryParam("pageSize") Integer pageSize,
+    Response openFile(@Context HttpServletRequest req, @QueryParam("umUser") String umUser, @QueryParam("path")String path,@QueryParam("page")Integer page,@QueryParam("pageSize") Integer pageSize,
                       @QueryParam("charset")String charset) throws IOException, WorkSpaceException;
 
     @PostMapping("/api/filesystem/saveScript")

@@ -23,7 +23,7 @@ trait SSOInterceptor {
     * @param requestUrl
     * @return
     */
-  def redirectTo(gatewayContext: GatewayContext): String
+  def redirectTo(requestUrl: URI): String
 
   /**
     * gateway退出时，会调用此接口，以保证gateway清除cookie后，SSO单点登录也会把登录信息清除掉
@@ -35,7 +35,6 @@ trait SSOInterceptor {
 object SSOInterceptor {
   import scala.collection.JavaConversions._
   private var interceptor: SSOInterceptor = _
-  
   def getSSOInterceptor: SSOInterceptor = if(interceptor != null) interceptor else {
     val ssoInterceptors = DataWorkCloudApplication.getApplicationContext.getBeansOfType(classOf[SSOInterceptor])
     if(ssoInterceptors != null && !ssoInterceptors.isEmpty) {

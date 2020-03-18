@@ -31,7 +31,7 @@ class JobLogAction private() extends GetAction with UJESJobAction {
 
   private var execId: String = _
 
-  override def suffixURLs: Array[String] = Array("entrance", execId, "progress")
+  override def suffixURLs: Array[String] = Array("entrance", execId, "log")
 
 }
 
@@ -39,7 +39,6 @@ object JobLogAction {
   def builder(): Builder = new Builder
   class Builder private[JobLogAction]() {
     private var user: String = _
-    private var umUser: String = _
     private var execId: String = _
     private var fromLine: Int = _
     private var size: Int = _
@@ -63,10 +62,6 @@ object JobLogAction {
       this.user = user
       this
     }
-     def setUmUser(umUser: String): Builder = {
-      this.umUser = umUser
-      this
-    }
 
     def setExecId(execId: String): Builder = {
       this.execId = execId
@@ -79,7 +74,6 @@ object JobLogAction {
       if(user == null) throw new UJESClientBuilderException("user is needed!")
       jobLogAction.execId = execId
       jobLogAction.setUser(user)
-      jobLogAction.setParameter("umUser", umUser)
       if(fromLine > 0) jobLogAction.setParameter("fromLine", fromLine)
       if(size > 0) jobLogAction.setParameter("size", size)
       jobLogAction

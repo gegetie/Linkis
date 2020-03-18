@@ -1,29 +1,41 @@
+#!/bin/sh
+
+shellDir=`dirname $0`
+workDir=`cd ${shellDir}/..;pwd`
+
+###
 SSH_PORT=22
 
 ### deploy user
 deployUser=hadoop
-
-
+EUREKA_SERVICE_URL=http://bxv-dapgateway-06:20303/eureka/
+IMPALA_COORDINATOR_HOST=datanode-03
 ### The install home path of Linkis
-LINKIS_INSTALL_HOME=/appcom/Install/Linkis        #Must provided
-
-
-
+LINKIS_INSTALL_HOME=$workDir        #Must provided
 ### Specifies the user workspace, which is used to store the user's script files and log files.
 ### Generally local directory
 WORKSPACE_USER_ROOT_PATH=file:///tmp/linkis/ ##file:// required
 ### User's root hdfs path
 HDFS_USER_ROOT_PATH=hdfs:///tmp/linkis ##hdfs:// required
-
-### Path to store job ResultSet：file or hdfs path
+### Path to store job ResultSet:file or hdfs path
 RESULT_SET_ROOT_PATH=hdfs:///tmp/linkis
-
 ### Provide the DB information of Hive metadata database.
-#HIVE_META_URL=
-#HIVE_META_USER=
-#HIVE_META_PASSWORD=
+HIVE_META_URL=
+HIVE_META_USER=
+HIVE_META_PASSWORD=
+## java application default jvm memory
+export SERVER_HEAP_SIZE="1024M"
 
+###HADOOP CONF DIR
+HADOOP_CONF_DIR=/etc/hadoop/conf
 
+###HIVE CONF DIR
+HIVE_CONF_DIR=/etc/hive/conf
+
+###SPARK CONF DIR
+SPARK_CONF_DIR=/etc/spark/conf
+
+### EUREKA_SERVICE_URL
 ################### The install Configuration of all Micro-Services #####################
 #
 #    NOTICE:
@@ -33,67 +45,80 @@ RESULT_SET_ROOT_PATH=hdfs:///tmp/linkis
 #            Linkis in a distributed manner and set the following microservice parameters
 #
 
-###  EUREKA install information。
-###  You can access it in your browser at the address below：http://${EUREKA_INSTALL_IP}:${EUREKA_PORT}
-EUREKA_INSTALL_IP=127.0.0.1         # Microservices Service Registration Discovery Center
+###  EUREKA install information
+###  You can access it in your browser at the address below:http://${EUREKA_INSTALL_IP}:${EUREKA_PORT}
+#EUREKA_INSTALL_IP=127.0.0.1         # Microservices Service Registration Discovery Center
 EUREKA_PORT=20303
 
 ###  Gateway install information
-GATEWAY_INSTALL_IP=127.0.0.1
+#GATEWAY_INSTALL_IP=127.0.0.1
 GATEWAY_PORT=9001
 
 ###  publicservice
-PUBLICSERVICE_INSTALL_IP=127.0.0.1
-PUBLICSERVICE_PORT=9002
+#PUBLICSERVICE_INSTALL_IP=127.0.0.1
+PUBLICSERVICE_PORT=9102
 
 
 ### Hive Metadata Query service, provide the metadata information of Hive databases.
-METADATA_INSTALL_IP=127.0.0.1
-METADATA_PORT=9008
+#METADATA_INSTALL_IP=127.0.0.1
+METADATA_PORT=9103
 
 
 ### ResourceManager
-RESOURCEMANAGER_INSTALL_IP=127.0.0.1
-RESOURCEMANAGER_PORT=9003
+#RESOURCEMANAGER_INSTALL_IP=127.0.0.1
+RESOURCEMANAGER_PORT=9104
 
 
 ### Spark
 ### This service is used to provide spark capability.
-SPARK_INSTALL_IP=127.0.0.1
-SPARK_EM_PORT=10001
-SPARK_ENTRANCE_PORT=10002
+#SPARK_INSTALL_IP=127.0.0.1
+SPARK_EM_PORT=9105
+SPARK_ENTRANCE_PORT=9106
 
 
 ### Hive
 ### This service is used to provide hive capability.
-HIVE_INSTALL_IP=127.0.0.1
-HIVE_EM_PORT=11001
-HIVE_ENTRANCE_PORT=11002
+#HIVE_INSTALL_IP=127.0.0.1
+HIVE_EM_PORT=9107
+HIVE_ENTRANCE_PORT=9108
 
 
 ### PYTHON
 ### This service is used to provide python capability.
-PYTHON_INSTALL_IP=127.0.0.1
-PYTHON_EM_PORT=12001
-PYTHON_ENTRANCE_PORT=12002
-
-
-### Impala
-### This service is used to provide impala capability.
-IMPALA_INSTALL_IP=127.0.0.1
-IMPALA_EM_PORT=13001
-IMPALA_ENTRANCE_PORT=13002
+#PYTHON_INSTALL_IP=127.0.0.1
+PYTHON_EM_PORT=9109
+PYTHON_ENTRANCE_PORT=9110
 
 
 ### JDBC
 ### This service is used to provide jdbc capability.
-JDBC_INSTALL_IP=127.0.0.1
-JDBC_ENTRANCE_PORT=9888
+#JDBC_INSTALL_IP=127.0.0.1
+JDBC_ENTRANCE_PORT=9111
+
+### SHELL
+### This service is used to provide shell capability.
+#SHELL_INSTALL_IP=127.0.0.1
+SHELL_EM_PORT=9114
+SHELL_ENTRANCE_PORT=9115
+
+
+### IMPALA
+### This service is used to provide python capability.
+#IMPALA_INSTALL_IP=127.0.0.1
+IMPALA_EM_PORT=9116
+IMPALA_ENTRANCE_PORT=9117
+
+### BML
+### This service is used to provide BML capability.
+#BML_INSTALL_IP=127.0.0.1
+BML_PORT=9113
 
 ########################################################################################
-#LDAP_URL=ldap://ldap-inc.weizhipin.com/
-LDAP_URL=ldap://192.168.1.15/
-LDAP_BASEDN=ou=people,dc=kanzhun,dc=org
 
-LINKIS_VERSION=0.9.0
+## LDAP is for enterprise authorization, if you just want to have a try, ignore it.
+#LDAP_URL=ldap://localhost:1389/
+#LDAP_BASEDN=dc=webank,dc=com
 
+
+
+LINKIS_VERSION=0.9.3

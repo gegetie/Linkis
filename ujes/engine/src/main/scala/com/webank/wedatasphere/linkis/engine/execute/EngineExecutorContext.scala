@@ -120,7 +120,7 @@ class EngineExecutorContext(engineExecutor: EngineExecutor) extends Logging{
     val path = ENGINE_RESULT_SET_STORE_PATH.getValue
     (if(path.endsWith("/")) path else path + "/") + "user" + "/" +
       DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd") + "/" + Sender.getThisServiceInstance.getApplicationName +
-      "/" + Sender.getThisServiceInstance.getInstance + "/" + System.nanoTime
+      "/" + System.nanoTime
   }
 
   def createDefaultResultSetWriter(): ResultSetWriter[_ <: MetaData, _ <: Record] = createResultSetWriter(resultSetFactory.getResultSetByType(engineExecutor.getDefaultResultSetType))
@@ -142,7 +142,6 @@ class EngineExecutorContext(engineExecutor: EngineExecutor) extends Logging{
     val fileName = if(StringUtils.isEmpty(alias)) "_" + aliasNum.getAndIncrement() else alias + "_" + aliasNum.getAndIncrement()
     val resultSetPath = resultSet.getResultSetPath(new FsPath(filePath), fileName)
     val resultSetWriter = ResultSetWriter.getResultSetWriter(resultSet, ENGINE_RESULT_SET_MAX_CACHE.getValue.toLong, resultSetPath)
-    //val resultSetWriter = ResultSetWriter.getResultSetWriter(resultSet, 0, resultSetPath)
     resultSetWriters synchronized resultSetWriters += resultSetWriter
     resultSetWriter
   }

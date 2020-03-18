@@ -40,7 +40,7 @@ import scala.collection.mutable.ArrayBuffer
   * Created by allenlliu on 2018/11/19.
   */
 
-object PythonInterpreter extends Logging{
+object PythonInterpreter {
   def create(): Interpreter = {
     val pythonExec = CommonVars("PYSPARK_DRIVER_PYTHON", "python").getValue
 

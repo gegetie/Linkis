@@ -36,29 +36,29 @@ class JobExecuteAction private() extends POSTAction with UJESJobAction {
   override def suffixURLs: Array[String] = Array("entrance", "execute")
   override def getRequestPayload: String = DWSHttpClient.jacksonJson.writeValueAsString(getRequestPayloads)
 }
-
 object JobExecuteAction {
   def builder(): Builder = new Builder
   class Builder private[JobExecuteAction]() {
     private var user: String = _
-    private var umUser: String = _
     private var executeCode: String = _
     private var formatCode: Boolean = false
     private var creator: String = _
     private var engineType: EngineType = _
     private var runType: RunType = _
+
+    private var engineTypeStr: String = _
+
+    private var runTypeStr: String = _
+
     private var scriptPath: String = _
     private var params: util.Map[String, Any]  = _
+
+    private var source: util.Map[String, Any]  = _
+
     def setUser(user: String): Builder = {
       this.user = user
       this
     }
-    
-     def setUmUser(umUser: String): Builder = {
-      this.umUser = umUser
-      this
-    }
-     
     def addExecuteCode(executeCode: String): Builder = {
       this.executeCode = executeCode
       this
@@ -79,6 +79,17 @@ object JobExecuteAction {
       this.runType = runType
       this
     }
+
+    def setEngineTypeStr(engineTypeStr: String): Builder = {
+      this.engineTypeStr = engineTypeStr
+      this
+    }
+    def setRunTypeStr(runTypeStr: String): Builder = {
+      this.runTypeStr = runTypeStr
+      this
+    }
+
+
     def setScriptPath(scriptPath: String): Builder = {
       this.scriptPath = scriptPath
       this
@@ -87,6 +98,12 @@ object JobExecuteAction {
       this.synchronized(this.params = params)
       this
     }
+
+    def setSource(source: util.Map[String, Any]): Builder = {
+      this.synchronized(this.source = source)
+      this
+    }
+
     def setStartupParams(startupMap: util.Map[String, Any]): Builder = {
       if(this.params == null) this synchronized {
         if(this.params == null) this.params = new util.HashMap[String, Any]
@@ -115,13 +132,25 @@ object JobExecuteAction {
       TaskUtils.addSpecialMap(this.params, variableMap)
       this
     }
+
+    private def getEngineType:String = {
+      if(engineType == null && engineTypeStr == null ) throw new UJESClientBuilderException("engineType is needed!")
+      if(engineType != null  ) return engineType.toString
+      engineTypeStr
+    }
+
+    private def getRunType:String = {
+      if (runType != null ) return  runType.toString
+      if (runTypeStr != null) return  runTypeStr
+      if(engineType != null  ) return engineType.getDefaultRunType.toString
+      else throw new UJESClientBuilderException("runType is needed!")
+    }
+
     def build(): JobExecuteAction = {
       val executeAction = new JobExecuteAction
       executeAction.setUser(user)
-      executeAction.addRequestPayload(TaskConstant.UMUSER, umUser)
-      if(engineType == null) throw new UJESClientBuilderException("engineType is needed!")
-      executeAction.addRequestPayload(TaskConstant.EXECUTEAPPLICATIONNAME, engineType.toString)
-      executeAction.addRequestPayload(TaskConstant.RUNTYPE, if(runType == null) engineType.getDefaultRunType.toString else runType.toString)
+      executeAction.addRequestPayload(TaskConstant.EXECUTEAPPLICATIONNAME, getEngineType)
+      executeAction.addRequestPayload(TaskConstant.RUNTYPE, getRunType)
       if(formatCode) executeAction.addRequestPayload(TaskConstant.FORMATCODE, true)
       if(StringUtils.isBlank(creator)) throw new UJESClientBuilderException("creator is needed!")
       executeAction.addRequestPayload(TaskConstant.REQUESTAPPLICATIONNAME, creator)
@@ -131,6 +160,8 @@ object JobExecuteAction {
       executeAction.addRequestPayload(TaskConstant.SCRIPTPATH, scriptPath)
       if(params == null) params = new util.HashMap[String, Any]()
       executeAction.addRequestPayload(TaskConstant.PARAMS, params)
+      if (this.source == null) this.source = new util.HashMap[String, Any]()
+      executeAction.addRequestPayload(TaskConstant.SOURCE, this.source)
       executeAction
     }
   }
@@ -161,13 +192,6 @@ object JobExecuteAction {
         override val toString: String = "hql"
       }
       override def getDefaultRunType: RunType = HQL
-    }
-     val IMPALA = new EngineType{
-      override val toString: String = "impala"
-      val SQL = new RunType {
-        override val toString: String = "sql"
-      }
-      override def getDefaultRunType: RunType = SQL
     }
     val SHELL = new EngineType{
       override val toString: String = "shell"

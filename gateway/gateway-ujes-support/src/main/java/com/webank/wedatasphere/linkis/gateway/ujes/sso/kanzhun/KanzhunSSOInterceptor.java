@@ -1,8 +1,8 @@
 package com.webank.wedatasphere.linkis.gateway.ujes.sso.kanzhun;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
-
 import javax.servlet.http.Cookie;
 
 import org.apache.commons.lang.StringUtils;
@@ -56,16 +56,16 @@ class KanzhunSSOInterceptor extends JavaLog implements SSOInterceptor {
 	}
 
 	@Override
-	public String redirectTo(GatewayContext gatewayContext ) {
-		String[] refererArry = gatewayContext.getRequest().getHeaders().get("Referer");
-		String referer=null;
-		if(null!=refererArry) {
-			referer = refererArry[0];
-		}else {
-			referer = gatewayContext.getRequest().getURI().getHost();
-		}
+	public String redirectTo(URI requestUrl) {
+		//String[] refererArry = gatewayContext.getRequest().getHeaders().get("Referer");
+		//String referer=null;
+		//if(null!=refererArry) {
+		//	referer = refererArry[0];
+		//}else {
+		//	referer = gatewayContext.getRequest().getURI().getHost();
+		//}
  		String callBack = String.format(this.passportUrl + "?token=%s&callback=%s", this.systemToken,
-				this.encodeUrl(this.getUrl(referer)));
+				this.encodeUrl(this.getUrl(requestUrl.toString())));
 		return callBack;
 	}
 	

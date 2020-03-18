@@ -44,7 +44,7 @@ import java.util.Map;
  * Created by allenlliu on 2018/10/17.
  */
 @Component
-@Path("/publicservice")
+@Path("/configuration")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ConfigurationRestfulApi {
@@ -57,10 +57,10 @@ public class ConfigurationRestfulApi {
     @GET
     @Path("/getFullTreesByAppName")
     public Response getFullTreesByAppName(@Context HttpServletRequest req,@QueryParam("umUser") String umUser, @QueryParam("appName") String appName, @QueryParam("creator") String creator) {
-    		String username = SecurityFilter.getLoginUsername(req);
-    		if(StringUtils.isNotBlank(umUser)) {
-    			username = umUser;
-    		}
+        String username = SecurityFilter.getLoginUsername(req);
+        if(StringUtils.isNotBlank(umUser)) {
+			username = umUser;
+		}
         List<ConfigTree> configTrees = configurationService.getFullTree(appName,username,creator);
         return Message.messageToResponse(Message.ok().data("fullTree", configTrees));
     }
@@ -68,11 +68,12 @@ public class ConfigurationRestfulApi {
     @POST
     @Path("/saveFullTree")
     public Response saveFullTree(@Context HttpServletRequest req, JsonNode json) throws IOException {
-    		String username = SecurityFilter.getLoginUsername(req);
-		if(null!=json.get("umUser")&&StringUtils.isNotBlank(json.get("umUser").asText())) {
+        List fullTrees = mapper.readValue(json.get("fullTree"), List.class);
+        String username = SecurityFilter.getLoginUsername(req);
+        //引擎用户替换登录用户
+        if(null!=json.get("umUser")&&StringUtils.isNotBlank(json.get("umUser").asText())) {
 			username = json.get("umUser").asText();
 		}
-        List fullTrees = mapper.readValue(json.get("fullTree"), List.class);
         for (Object o : fullTrees) {
             String s = BDPJettyServerHelper.gson().toJson(o);
             ConfigTree fullTree = BDPJettyServerHelper.gson().fromJson(s, ConfigTree.class);
@@ -84,6 +85,11 @@ public class ConfigurationRestfulApi {
 
     private void recursiveFullTree(ConfigTree fullTree,String userName){
         List<ConfigKeyValueVO> settings = fullTree.getSettings();
+/*        for (Map.Entry<String, String> stringStringEntry : kvs.entrySet()) {
+            ConfigKey key =  BDPJettyServerHelper.gson().fromJson(stringStringEntry.getKey(), ConfigKey.class);
+            ConfigKeyUser value = BDPJettyServerHelper.gson().fromJson(stringStringEntry.getValue(), ConfigKeyUser.class);
+            configurationService.updateUserValue(key,value);
+        }*/
         for (ConfigKeyValueVO setting : settings) {
             configurationService.updateUserValue(setting);
         }
@@ -94,4 +100,6 @@ public class ConfigurationRestfulApi {
             }
         }
     }
+
+
 }

@@ -27,6 +27,8 @@ import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
 import com.webank.wedatasphere.linkis.filesystem.restful.remote.FsRestfulRemote;
 import com.webank.wedatasphere.linkis.filesystem.service.FsService;
 import com.webank.wedatasphere.linkis.filesystem.util.Constants;
+import com.webank.wedatasphere.linkis.filesystem.util.FsUtil;
+import com.webank.wedatasphere.linkis.filesystem.util.FsUtil$;
 import com.webank.wedatasphere.linkis.filesystem.util.WorkspaceUtil;
 import com.webank.wedatasphere.linkis.server.Message;
 import com.webank.wedatasphere.linkis.server.security.SecurityFilter;
@@ -47,7 +49,6 @@ import com.webank.wedatasphere.linkis.storage.resultset.table.TableRecord;
 import com.webank.wedatasphere.linkis.storage.script.*;
 import com.webank.wedatasphere.linkis.storage.utils.StorageUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.*;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.codehaus.jackson.JsonNode;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -84,7 +85,7 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
 @Component
-@Path("publicservice")
+@Path("filesystem")
 public class FsRestfulApi implements FsRestfulRemote {
     @Autowired
     private FsService fsService;
@@ -99,7 +100,9 @@ public class FsRestfulApi implements FsRestfulRemote {
 
     private void fsValidate(FileSystem fileSystem) throws WorkSpaceException {
         if (fileSystem == null){
-            throw new WorkSpaceException("The user has obtained the filesystem for more than 2s. Please contact the administrator.（用户获取filesystem的时间超过2s，请联系管理员）");
+
+            throw new WorkSpaceException("The user has obtained the filesystem for more than " + FsUtil.FILESYSTEM_GET_TIMEOUT().getValue().toString()
+                    + "ms. Please contact the administrator.（用户获取filesystem的时间超过" + FsUtil.FILESYSTEM_GET_TIMEOUT().getValue().toString() + "ms，请联系管理员）");
         }
     }
 
@@ -143,6 +146,8 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("path:(路径：)" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
+        WorkspaceUtil.fileAndDirNameSpecialCharCheck(path);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
@@ -162,6 +167,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
@@ -182,6 +188,9 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(oldDest)) {
             throw new WorkSpaceException("Path(路径)：" + oldDest + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(oldDest,userName);
+        WorkspaceUtil.pathSafeCheck(newDest,userName);
+        WorkspaceUtil.fileAndDirNameSpecialCharCheck(newDest);
         if (StringUtils.isEmpty(newDest)) {
             //No change in file name(文件名字无变化)
             return Message.messageToResponse(Message.ok());
@@ -207,6 +216,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
@@ -233,6 +243,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
@@ -262,6 +273,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
@@ -319,10 +331,10 @@ public class FsRestfulApi implements FsRestfulRemote {
             String charset = json.get("charset");
             String userName = SecurityFilter.getLoginUsername(req);
             String path = json.get("path");
-            LOGGER.info("download:"+userName+",path:"+path);
             if (StringUtils.isEmpty(path)) {
                 throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
             }
+            WorkspaceUtil.pathSafeCheck(path,userName);
             if (StringUtils.isEmpty(charset)) {
                 charset = "utf-8";
             }
@@ -338,12 +350,11 @@ public class FsRestfulApi implements FsRestfulRemote {
             int bytesRead = 0;
             response.setCharacterEncoding(charset);
             java.nio.file.Path source = Paths.get(fsPath.getPath());
-            
             String contentType = Files.probeContentType(source);
             if(!StringUtils.isEmpty(contentType)) {
               response.addHeader("Content-Type", contentType);
             } else {
-            	  response.addHeader("Content-Type", "multipart/form-data");
+                  response.addHeader("Content-Type", "multipart/form-data");
             }
             response.addHeader("Content-Disposition", "attachment;filename="
                     + new File(fsPath.getPath()).getName());
@@ -366,7 +377,7 @@ public class FsRestfulApi implements FsRestfulRemote {
             StorageUtils.close(outputStream, inputStream, null);
         }
     }
-    
+
     /**
      * @param req
      * @param response
@@ -384,7 +395,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         ServletOutputStream outputStream = null;
         com.webank.wedatasphere.linkis.common.io.resultset.ResultSetReader<? extends MetaData, ? extends Record> resultSetReader = null;
         StringBuilder datacacheBuilder = new StringBuilder();
-        long cacheSize = 10000;
+        long cacheSize = 100;
         try {
             String charset = json.get("charset");
             String userName = SecurityFilter.getLoginUsername(req);
@@ -423,16 +434,15 @@ public class FsRestfulApi implements FsRestfulRemote {
 	                    resulstsetColumn.add(o == null ? "NULL" : o.toString());
 	                }
 	                //字段之间tab分割
-	                String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
-	                datacacheBuilder.append(rs);
-	                datacacheBuilder.append(System.getProperty("line.separator"));
-	                resulstsetColumn.clear();
+	               String rs = org.apache.commons.lang.StringUtils.join(resulstsetColumn, "\t");
+	               datacacheBuilder.append(rs);
+	               datacacheBuilder.append(System.getProperty("line.separator"));
+	               resulstsetColumn.clear();
 	                if(records%cacheSize==0) {
 	                		outputStream.write(datacacheBuilder.toString().getBytes()); 
 	                		outputStream.flush();
 	                		datacacheBuilder.setLength(0);
-	                		LOGGER.info("path "+ path + ",time taken: "+(System.currentTimeMillis() - startTime)/1000+" s, records "+records);
-	                }
+	               }
 	            } 
             }
             if (metaData instanceof LineMetaData) {
@@ -444,7 +454,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     	    	            outputStream.write(System.getProperty("line.separator").getBytes());  									 
                  } 
             }
-            LOGGER.info("path "+ path + ",time taken: "+(System.currentTimeMillis() - startTime)/1000+" s, records "+records);
+            LOGGER.info("download path "+ path + ",time taken: "+(System.currentTimeMillis() - startTime)/1000+" s, records "+records);
         } catch (Exception e) {
         	  	LOGGER.error("output fail", e);
             response.reset();
@@ -455,12 +465,12 @@ public class FsRestfulApi implements FsRestfulRemote {
             writer.flush();
             writer.close();
         } finally {
-        		resultSetReader.close();
             if (outputStream != null) {
         			outputStream.write(datacacheBuilder.toString().getBytes()); 
         			datacacheBuilder.setLength(0);
                 outputStream.flush();
             }
+            resultSetReader.close();
             StorageUtils.close(outputStream, inputStream, null);
         }
     }
@@ -494,17 +504,18 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/openFile")
     @Override
     public Response openFile(@Context HttpServletRequest req,
-    							@QueryParam("umUser") String umUser,
+    						 @QueryParam("umUser") String umUser,
                              @QueryParam("path") String path,
                              @QueryParam("page") Integer page,
                              @QueryParam("pageSize") Integer pageSize,
                              @QueryParam("charset") String charset) throws IOException, WorkSpaceException {
-    		LOGGER.info("openFile:"+umUser+",path:"+path);
-        String userName = SecurityFilter.getLoginUsername(req);
+		LOGGER.info("openFile:"+umUser+",path:"+path);
+    	String userName = SecurityFilter.getLoginUsername(req);
         Message message = Message.ok();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = null;
         if(!StringUtils.isEmpty(umUser)) {
@@ -666,6 +677,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         String charset = (String) json.get("charset");
         if (StringUtils.isEmpty(charset)) {
             charset = "utf-8";
@@ -733,6 +745,7 @@ public class FsRestfulApi implements FsRestfulRemote {
             if (StringUtils.isEmpty(path)) {
                 throw new WorkSpaceException("Path(路径)：" + path + "is empty(为空)！");
             }
+            WorkspaceUtil.pathSafeCheck(path,userName);
             String type = WorkspaceUtil.getOpenFileTypeByFileName(path);
             if (!"resultset".equals(type)) {
                 throw new WorkSpaceException("unsupported type");
@@ -841,6 +854,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         String suffix = path.substring(path.lastIndexOf("."));
         FsPath fsPath = new FsPath(path);
         Map<String, Object> res = new HashMap<String, Object>();
@@ -911,6 +925,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
         }
+        WorkspaceUtil.pathSafeCheck(path,userName);
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
         fsValidate(fileSystem);
