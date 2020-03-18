@@ -19,7 +19,7 @@ package com.webank.wedatasphere.linkis.engine.hive.common
 import java.io.File
 import java.nio.file.Paths
 
-import com.webank.wedatasphere.linkis.engine.hive.exception.HadoopConfSetFailedException
+import com.webank.wedatasphere.linkis.engine.hive.exception.HiveConfSetFailedException
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf
